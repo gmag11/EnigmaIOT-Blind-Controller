@@ -32,6 +32,13 @@ typedef enum {
 	error = 0
 } blindState_t;
 
+#if defined ESP8266 || defined ESP32
+#include <functional>
+typedef std::function<void (blindState_t state, uint8_t position)> stateNotify_cb_t;
+#else
+typedef void (*stateNotify_cb_t)(blindState_t state, uint8_t position);
+#endif
+
 class BlindController
 {
  protected:
@@ -47,6 +54,7 @@ class BlindController
 	 time_t blindStartedMoving;
 	 bool movingUp = false;
 	 bool movingDown = false;
+	 stateNotify_cb_t stateNotify_cb;
 
  public:
 	 void begin (blindControlerHw_t *data);
@@ -61,6 +69,20 @@ class BlindController
 		 return blindState;
 	 }
 	 void loop ();
+	 void setEventManager (stateNotify_cb_t cb) {
+		 stateNotify_cb = cb;
+	 }
+	 char* stateToStr (int state) {
+		 switch (state) {
+		 case rollingUp:
+			 return "Rolling up";
+		 case rollingDown:
+			 return "Rolling down";
+		 case stopped:
+			 return "Stopped";
+		 }
+	 }
+	 void requestStop ();
 
 protected:
 	void rollup ();
@@ -79,7 +101,7 @@ protected:
 		DEBUG_DBG ("Desired movement: %d. Calculated time: %d", movement, calculatedTime);
 		return calculatedTime;
 	}
-	void showPosition ();
+	void sendPosition ();
 };
 
 #endif

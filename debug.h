@@ -21,15 +21,15 @@
 #endif
 
 #define NO_DEBUG	0 ///< @brief Debug level that will give no debug output
-#define ERROR	1 ///< @brief Debug level that will give error messages
-#define WARN	2 ///< @brief Debug level that will give error and warning messages
-#define INFO	3 ///< @brief Debug level that will give error, warning and info messages
-#define DBG	    4 ///< @brief Debug level that will give error, warning,info AND dbg messages
-#define VERBOSE	5 ///< @brief Debug level that will give all defined messages
+#define ERROR	    1 ///< @brief Debug level that will give error messages
+#define WARN	    2 ///< @brief Debug level that will give error and warning messages
+#define INFO	    3 ///< @brief Debug level that will give error, warning and info messages
+#define DBG	        4 ///< @brief Debug level that will give error, warning,info AND dbg messages
+#define VERBOSE	    5 ///< @brief Debug level that will give all defined messages
 
 #define DEBUG_ESP_PORT Serial ///< @brief Stream to output debug info. It will normally be `Serial`
 #ifndef DEBUG_LEVEL
-#define DEBUG_LEVEL DBG ///< @brief Possible values VERBOSE, DBG, INFO, WARN, ERROR, NONE
+#define DEBUG_LEVEL WARN ///< @brief Possible values VERBOSE, DBG, INFO, WARN, ERROR, NONE
 #endif //DEBUG_LEVEL
 
 
