@@ -10,7 +10,6 @@
 #endif
 
 #include <DebounceEvent.h>
-#include "debug.h"
 
 typedef struct {
 public:
@@ -19,6 +18,8 @@ public:
 	int upButton;
 	int downButton;
 	time_t fullTravellingTime;
+	time_t notifPeriod;
+	time_t keepAlivePeriod;
 	int ON_STATE = HIGH;
 protected:
 	int OFF_STATE = !ON_STATE;
@@ -28,7 +29,7 @@ protected:
 typedef enum {
 	rollingUp = 1,
 	rollingDown = 2,
-	stopped = 3,
+	stopped = 4,
 	error = 0
 } blindState_t;
 
@@ -93,14 +94,7 @@ protected:
 	int8_t timeToPos (time_t movementTime) {
 		return movementTime * 100 / config.fullTravellingTime;
 	}
-	time_t movementToTime (int8_t movement) {
-		time_t calculatedTime = movement * config.fullTravellingTime / 100;
-		if (movement >= config.fullTravellingTime) {
-			calculatedTime = config.fullTravellingTime * 1.1;
-		}
-		DEBUG_DBG ("Desired movement: %d. Calculated time: %d", movement, calculatedTime);
-		return calculatedTime;
-	}
+	time_t movementToTime (int8_t movement);
 	void sendPosition ();
 };
 

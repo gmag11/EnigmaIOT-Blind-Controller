@@ -4,6 +4,10 @@
  Author:	gmartin
 */
 
+#ifndef ESP8266
+#error Node only supports ESP8266 platform
+#endif
+
 #include <Arduino.h>
 #include <DebounceEvent.h>
 #include "BlindController.h"
@@ -23,6 +27,8 @@
 
 #include <SerialCommands.h>
 
+#define BLUE_LED LED_BUILTIN
+
 void cmd_up_cb (SerialCommands* sender);
 void cmd_down_cb (SerialCommands* sender);
 void cmd_pos_cb (SerialCommands* sender);
@@ -35,6 +41,17 @@ SerialCommand cmd_pos ("POS", cmd_pos_cb);
 SerialCommand cmd_stop ("STOP", cmd_stop_cb);
 
 BlindController blindController;
+
+void connectEventHandler () {
+    Serial.println ("Connected");
+}
+
+void disconnectEventHandler (nodeInvalidateReason_t reason) {
+    Serial.printf ("Disconnected. Reason %d", reason);
+}
+
+void processRxData (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command) {
+}
 
 void cmd_unrecognized (SerialCommands* sender, const char* cmd) {
     sender->GetSerial ()->printf ("Unrecognized command [%s]\n", cmd);
@@ -73,11 +90,34 @@ void cmd_stop_cb (SerialCommands* sender) {
 
 void processEvent (blindState_t state, int8_t position) {
     Serial.printf ("State: %s. Position %d\n", blindController.stateToStr (state), position);
+    CayenneLPP msg (20);
+
+    msg.addDigitalInput (1, state);
+    msg.addDigitalInput (2, position);
+
+    Serial.printf ("Trying to send: %s\n", printHexBuffer (msg.getBuffer (), msg.getSize ()));
+
+    if (!EnigmaIOTNode.sendData (msg.getBuffer (), msg.getSize ())) {
+        Serial.println ("---- Error sending data");
+    } else {
+        Serial.println ("---- Data sent");
+    }
 }
 
 void setup() {
     Serial.begin (115200);
     delay (1000);
+    Serial.println ();
+
+    EnigmaIOTNode.setLed (BLUE_LED);
+    //pinMode (BLUE_LED, OUTPUT);
+    //digitalWrite (BLUE_LED, HIGH); // Turn on LED
+    EnigmaIOTNode.onConnected (connectEventHandler);
+    EnigmaIOTNode.onDisconnected (disconnectEventHandler);
+    EnigmaIOTNode.onDataRx (processRxData);
+
+    EnigmaIOTNode.begin (&Espnow_hal, NULL, NULL, true, false);
+
     blindController.setEventManager (processEvent);
     blindController.begin ();
 
@@ -92,4 +132,5 @@ void setup() {
 void loop() {
     commands.ReadSerial ();
     blindController.loop ();
+    EnigmaIOTNode.handle ();
 }

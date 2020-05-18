@@ -3,7 +3,8 @@
 // 
 
 #include "BlindController.h"
-#include <functional>
+#include "debug.h"
+//#include <functional>
 
 using namespace std;
 using namespace placeholders;
@@ -14,6 +15,8 @@ constexpr auto DOWN_BUTTON = 2;
 constexpr auto UP_RELAY = 5;
 constexpr auto DOWN_RELAY = 4;
 constexpr auto ROLLING_TIME = 15000;
+constexpr auto NOTIF_PERIOD_RATIO = 10;
+constexpr auto KEEP_ALIVE_PERIOD_RATIO = 2;
 
 void BlindController::callbackUpButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length) {
 	DEBUG_VERBOSE ("Up button. Event %d Count %d", event, count);
@@ -82,6 +85,8 @@ void BlindController::begin (blindControlerHw_t* data) {
 	config.OFF_STATE = !config.ON_STATE;
 	config.upButton = data->upButton;
 	config.upRelayPin = data->upRelayPin;
+	config.keepAlivePeriod = config.fullTravellingTime * KEEP_ALIVE_PERIOD_RATIO;
+	config.notifPeriod = config.fullTravellingTime / NOTIF_PERIOD_RATIO;
 
 	upButton = new DebounceEvent (config.upButton, std::bind (&BlindController::callbackUpButton, this, _1, _2, _3, _4), BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH | BUTTON_SET_PULLUP, 50, 500);
 	downButton = new DebounceEvent (config.downButton, std::bind (&BlindController::callbackDownButton, this, _1, _2, _3, _4), BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH | BUTTON_SET_PULLUP, 50, 500);
@@ -261,7 +266,16 @@ void BlindController::sendPosition () {
 	switch (blindState) {
 	case rollingUp:
 	case rollingDown:
-		if (millis () - lastShowedPos > 1000) {
+		if (millis () - lastShowedPos > config.notifPeriod) {
+			lastShowedPos = millis ();
+			DEBUG_INFO ("Position: %d", position);
+			if (stateNotify_cb) {
+				stateNotify_cb (blindState, position);
+			}
+		}
+		break;
+	case stopped:
+		if (millis () - lastShowedPos > config.keepAlivePeriod) {
 			lastShowedPos = millis ();
 			DEBUG_INFO ("Position: %d", position);
 			if (stateNotify_cb) {
@@ -295,3 +309,11 @@ void BlindController::loop () {
 	sendPosition ();
 }
 
+time_t BlindController::movementToTime (int8_t movement) {
+	time_t calculatedTime = movement * config.fullTravellingTime / 100;
+	if (movement >= config.fullTravellingTime) {
+		calculatedTime = config.fullTravellingTime * 1.1;
+	}
+	DEBUG_DBG ("Desired movement: %d. Calculated time: %d", movement, calculatedTime);
+	return calculatedTime;
+}
