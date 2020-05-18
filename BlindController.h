@@ -10,6 +10,7 @@
 #endif
 
 #include <DebounceEvent.h>
+#include "debug.h"
 
 typedef struct {
 public:
