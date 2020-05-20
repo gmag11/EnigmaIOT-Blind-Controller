@@ -50,7 +50,8 @@ void disconnectEventHandler (nodeInvalidateReason_t reason) {
     Serial.printf ("Disconnected. Reason %d", reason);
 }
 
-void processRxData (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command) {
+void processRxData (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding) {
+    // TODO
 }
 
 void cmd_unrecognized (SerialCommands* sender, const char* cmd) {
@@ -90,14 +91,21 @@ void cmd_stop_cb (SerialCommands* sender) {
 
 void processEvent (blindState_t state, int8_t position) {
     Serial.printf ("State: %s. Position %d\n", blindController.stateToStr (state), position);
-    CayenneLPP msg (20);
 
-    msg.addDigitalInput (1, state);
-    msg.addDigitalInput (2, position);
+    const size_t capacity = JSON_OBJECT_SIZE (5);
+    DynamicJsonDocument json (capacity);
 
-    Serial.printf ("Trying to send: %s\n", printHexBuffer (msg.getBuffer (), msg.getSize ()));
+    json["state"] = (int)state;
+    json["pos"] = position;
 
-    if (!EnigmaIOTNode.sendData (msg.getBuffer (), msg.getSize ())) {
+    int len = measureMsgPack (json) + 1;
+    uint8_t* buffer = (uint8_t*)malloc (len);
+    len = serializeMsgPack (json, (char*)buffer, len);
+
+    Serial.printf ("Trying to send: %s\n", printHexBuffer (
+        buffer, len));
+
+    if (!EnigmaIOTNode.sendData (buffer, len, MSG_PACK)) {
         Serial.println ("---- Error sending data");
     } else {
         Serial.println ("---- Data sent");
