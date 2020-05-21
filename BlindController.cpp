@@ -15,7 +15,7 @@ constexpr auto DOWN_BUTTON = 2;
 constexpr auto UP_RELAY = 5;
 constexpr auto DOWN_RELAY = 4;
 constexpr auto ROLLING_TIME = 15000;
-constexpr auto NOTIF_PERIOD_RATIO = 10;
+constexpr auto NOTIF_PERIOD_RATIO = 20;
 constexpr auto KEEP_ALIVE_PERIOD_RATIO = 2;
 
 void BlindController::callbackUpButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length) {
@@ -128,11 +128,11 @@ void BlindController::fullRolldown () {
 	DEBUG_DBG ("--- STATE: Rolling down");
 }
 
-void BlindController::gotoPosition (int8_t pos) {
+bool BlindController::gotoPosition (int8_t pos) {
 	// TODO
 	if (position == -1) {
 		DEBUG_WARN ("Position not calibrated");
-		return;
+		return false;
 	}
 	stop ();
 	positionRequest = pos;
@@ -158,6 +158,7 @@ void BlindController::gotoPosition (int8_t pos) {
 			stateNotify_cb (blindState, position);
 		}
 	}
+	return true;
 }
 
 void  BlindController::rollup () {

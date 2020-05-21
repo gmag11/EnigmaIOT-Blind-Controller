@@ -51,6 +51,54 @@ void disconnectEventHandler (nodeInvalidateReason_t reason) {
     Serial.printf ("Disconnected. Reason %d", reason);
 }
 
+bool sendJson (DynamicJsonDocument json) {
+    int len = measureMsgPack (json) + 1;
+    uint8_t* buffer = (uint8_t*)malloc (len);
+    len = serializeMsgPack (json, (char*)buffer, len);
+
+    Serial.printf ("Trying to send: %s\n", printHexBuffer (
+        buffer, len));
+    bool result = EnigmaIOTNode.sendData (buffer, len, MSG_PACK);
+    if (!result) {
+        Serial.println ("---- Error sending data");
+    } else {
+        Serial.println ("---- Data sent");
+    }
+    free (buffer);
+    return result;
+}
+
+bool sendGetPosition () {
+    const size_t capacity = JSON_OBJECT_SIZE (2);
+    DynamicJsonDocument json (capacity);
+
+    json["cmd"] = "pos";
+    json["pos"] = blindController.getPosition ();
+
+    return sendJson (json);
+}
+
+bool sendGetStatus () {
+    const size_t capacity = JSON_OBJECT_SIZE (3);
+    DynamicJsonDocument json (capacity);
+
+    json["cmd"] = "state";
+    json["state"] = (int)blindController.getState ();
+    json["pos"] = blindController.getPosition ();
+
+    return sendJson (json);
+}
+
+bool sendCommandResp (const char* command, bool result) {
+    const size_t capacity = JSON_OBJECT_SIZE (2);
+    DynamicJsonDocument json (capacity);
+
+    json["cmd"] = command;
+    json["res"] = (int)result;
+
+    return sendJson (json);
+}
+
 void processRxData (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding) {
     // TODO
 
@@ -75,6 +123,54 @@ void processRxData (const uint8_t* mac, const uint8_t* buffer, uint8_t length, n
     Serial.printf ("Command: %d = %s\n", command, command == nodeMessageType_t::DOWNSTREAM_DATA_GET ? "GET": "SET");
     serializeJsonPretty (doc, Serial);
     Serial.println ();
+
+    if (command == nodeMessageType_t::DOWNSTREAM_DATA_GET) {
+        if (doc["cmd"] == "pos") {
+            Serial.printf ("Position = %d\n", blindController.getPosition ());
+            sendGetPosition ();
+        } else if (doc["cmd"] == "state") {
+            Serial.printf ("Status = %d\n", blindController.getState ());
+            sendGetStatus ();
+        }
+    } else {
+        if (doc["cmd"] == "uu") {
+            Serial.printf ("Full up request\n");
+            sendCommandResp ("uu",true);
+            blindController.fullRollup ();
+        } else if (doc["cmd"] == "dd") {
+            Serial.printf ("Full down request\n");
+            sendCommandResp ("dd",true);
+            blindController.fullRolldown ();
+        } else if (doc["cmd"] == "go") {
+            if (doc.containsKey ("pos")) {
+                sendCommandResp ("go", true);
+            } else {
+                sendCommandResp ("go", false);
+                return;
+            }
+            int position = doc["pos"];
+            if (position > 100) {
+                position = 100;
+                blindController.fullRollup ();
+                sendCommandResp ("go", true);
+            } else  if (position < 0) {
+                position = 0;
+                blindController.fullRolldown ();
+                sendCommandResp ("go", true);
+            } else {
+                if (blindController.gotoPosition (position)) {
+                    sendCommandResp ("go", true);
+                } else {
+                    sendCommandResp ("go", false);
+                }
+            }
+            Serial.printf ("Go to position %d request\n", position);
+        } else if (doc["cmd"] == "stop") {
+            Serial.printf ("Stop request\n");
+            sendCommandResp ("stop", true);
+            blindController.requestStop ();
+        }
+    }
 }
 
 void cmd_unrecognized (SerialCommands* sender, const char* cmd) {
@@ -112,7 +208,7 @@ void cmd_stop_cb (SerialCommands* sender) {
 }
 
 
-void processEvent (blindState_t state, int8_t position) {
+void processBlindEvent (blindState_t state, int8_t position) {
     Serial.printf ("State: %s. Position %d\n", blindController.stateToStr (state), position);
 
     const size_t capacity = JSON_OBJECT_SIZE (5);
@@ -120,19 +216,21 @@ void processEvent (blindState_t state, int8_t position) {
 
     json["state"] = (int)state;
     json["pos"] = position;
+    json["mem"] = ESP.getFreeHeap ();
 
-    int len = measureMsgPack (json) + 1;
-    uint8_t* buffer = (uint8_t*)malloc (len);
-    len = serializeMsgPack (json, (char*)buffer, len);
+    sendJson (json);
+    //int len = measureMsgPack (json) + 1;
+    //uint8_t* buffer = (uint8_t*)malloc (len);
+    //len = serializeMsgPack (json, (char*)buffer, len);
 
-    Serial.printf ("Trying to send: %s\n", printHexBuffer (
-        buffer, len));
+    //Serial.printf ("Trying to send: %s\n", printHexBuffer (
+    //    buffer, len));
 
-    if (!EnigmaIOTNode.sendData (buffer, len, MSG_PACK)) {
-        Serial.println ("---- Error sending data");
-    } else {
-        Serial.println ("---- Data sent");
-    }
+    //if (!EnigmaIOTNode.sendData (buffer, len, MSG_PACK)) {
+    //    Serial.println ("---- Error sending data");
+    //} else {
+    //    Serial.println ("---- Data sent");
+    //}
 }
 
 void setup() {
@@ -149,7 +247,7 @@ void setup() {
 
     EnigmaIOTNode.begin (&Espnow_hal, NULL, NULL, true, false);
 
-    blindController.setEventManager (processEvent);
+    blindController.setEventManager (processBlindEvent);
     blindController.begin ();
 
     commands.SetDefaultHandler (cmd_unrecognized);
