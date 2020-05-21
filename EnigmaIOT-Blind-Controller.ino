@@ -15,6 +15,7 @@
 #include <EnigmaIOTNode.h>
 #include <espnow_hal.h>
 #include <CayenneLPP.h>
+#include <ArduinoJson.h>
 
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
@@ -52,6 +53,28 @@ void disconnectEventHandler (nodeInvalidateReason_t reason) {
 
 void processRxData (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding) {
     // TODO
+
+    if (command != nodeMessageType_t::DOWNSTREAM_DATA_GET && command != nodeMessageType_t::DOWNSTREAM_DATA_SET) {
+        DEBUG_WARN ("Wrong message type");
+        return;
+    }
+    if (payloadEncoding != MSG_PACK) {
+        DEBUG_WARN ("Wrong payload encoding");
+        return;
+    }
+
+    DynamicJsonDocument doc (1000);
+    uint8_t tempBuffer[MAX_MESSAGE_LENGTH];
+
+    memcpy (tempBuffer, buffer, length);
+    DeserializationError error = deserializeMsgPack (doc, tempBuffer, length);
+    if (error != DeserializationError::Ok) {
+        DEBUG_WARN ("Error decoding command: %s", error.c_str ());
+        return;
+    }
+    Serial.printf ("Command: %d = %s\n", command, command == nodeMessageType_t::DOWNSTREAM_DATA_GET ? "GET": "SET");
+    serializeJsonPretty (doc, Serial);
+    Serial.println ();
 }
 
 void cmd_unrecognized (SerialCommands* sender, const char* cmd) {
