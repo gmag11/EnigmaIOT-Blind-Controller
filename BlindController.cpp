@@ -128,32 +128,39 @@ void BlindController::fullRolldown () {
 	DEBUG_DBG ("--- STATE: Rolling down");
 }
 
-bool BlindController::gotoPosition (int8_t pos) {
-	// TODO
-	if (position == -1) {
-		DEBUG_WARN ("Position not calibrated");
+bool BlindController::gotoPosition (int pos) {
+	int currentPosition = position;
+
+	if (pos <= 0) {
+		pos = 0;
+		currentPosition = 100; // Force full rolling down
+	} else if (pos >= 100) {
+		pos = 100;
+		currentPosition = 0; // Force full rolling up
+	} else if (position == -1) {
+		DEBUG_WARN ("Position not calibrated. Pos = %d", pos);
 		return false;
 	}
 	stop ();
 	positionRequest = pos;
-	if (pos > position) {
+	if (pos > currentPosition) {
 		blindState = rollingUp;
+		DEBUG_WARN ("--- STATE: Rolling up to position %d", pos);
 		if (pos < 100) {
 			travellingTime = movementToTime (pos - position);
 		} else {
-			travellingTime = config.fullTravellingTime * 1.1;
+			fullRollup ();
 		}
-		DEBUG_DBG ("--- STATE: Rolling up to position %d", pos);
-	} else if (pos < position) {
+	} else if (pos < currentPosition) {
 		blindState = rollingDown;
+		DEBUG_WARN ("--- STATE: Rolling down to position %d", pos);
 		if (pos > 0) {
 			travellingTime = movementToTime (position - pos);
 		} else {
-			travellingTime = config.fullTravellingTime * 1.1;
+			fullRolldown ();
 		}
-		DEBUG_DBG ("--- STATE: Rolling down to position %d", pos);
 	} else {
-		DEBUG_DBG ("Request = pos");
+		DEBUG_WARN ("Requested = Current position");
 		if (stateNotify_cb) {
 			stateNotify_cb (blindState, position);
 		}

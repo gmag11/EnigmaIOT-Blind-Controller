@@ -62,7 +62,7 @@ class BlindController
 	 void begin ();
 	 void fullRollup ();
 	 void fullRolldown ();
-	 bool gotoPosition (int8_t pos);
+	 bool gotoPosition (int pos);
 	 int8_t getPosition () {
 		 return position;
 	 }

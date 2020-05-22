@@ -60,9 +60,9 @@ bool sendJson (DynamicJsonDocument json) {
         buffer, len));
     bool result = EnigmaIOTNode.sendData (buffer, len, MSG_PACK);
     if (!result) {
-        Serial.println ("---- Error sending data");
+        DEBUG_WARN ("---- Error sending data");
     } else {
-        Serial.println ("---- Data sent");
+        DEBUG_WARN ("---- Data sent");
     }
     free (buffer);
     return result;
@@ -127,47 +127,45 @@ void processRxData (const uint8_t* mac, const uint8_t* buffer, uint8_t length, n
     if (command == nodeMessageType_t::DOWNSTREAM_DATA_GET) {
         if (doc["cmd"] == "pos") {
             Serial.printf ("Position = %d\n", blindController.getPosition ());
-            sendGetPosition ();
+            if (!sendGetPosition ()) {
+                DEBUG_WARN ("Error sending get position command response");
+            }
         } else if (doc["cmd"] == "state") {
             Serial.printf ("Status = %d\n", blindController.getState ());
-            sendGetStatus ();
+            if (!sendGetStatus ()) {
+                DEBUG_WARN ("Error sending get state command response");
+            }
         }
     } else {
-        if (doc["cmd"] == "uu") {
+        if (doc["cmd"] == "uu") { // Command full rollup
             Serial.printf ("Full up request\n");
-            sendCommandResp ("uu",true);
+            if (!sendCommandResp ("uu",true)) {
+                DEBUG_WARN ("Error sending Full rollup command response");
+            }
             blindController.fullRollup ();
-        } else if (doc["cmd"] == "dd") {
+        } else if (doc["cmd"] == "dd") { // Command full rolldown
             Serial.printf ("Full down request\n");
-            sendCommandResp ("dd",true);
+            if (!sendCommandResp ("dd", true)) {
+                DEBUG_WARN ("Error sending Full rolldown command response");
+            }
             blindController.fullRolldown ();
-        } else if (doc["cmd"] == "go") {
-            if (doc.containsKey ("pos")) {
-                sendCommandResp ("go", true);
-            } else {
-                sendCommandResp ("go", false);
+        } else if (doc["cmd"] == "go") { // Command go to position
+            if (!doc.containsKey ("pos")) {
+                if (!sendCommandResp ("go", false)) {
+                    DEBUG_WARN ("Error sending go command response");
+                }
                 return;
             }
             int position = doc["pos"];
-            if (position > 100) {
-                position = 100;
-                blindController.fullRollup ();
-                sendCommandResp ("go", true);
-            } else  if (position < 0) {
-                position = 0;
-                blindController.fullRolldown ();
-                sendCommandResp ("go", true);
-            } else {
-                if (blindController.gotoPosition (position)) {
-                    sendCommandResp ("go", true);
-                } else {
-                    sendCommandResp ("go", false);
-                }
+            if (!sendCommandResp ("go", blindController.gotoPosition (position))) {
+                DEBUG_WARN ("Error sending go command response");
             }
             Serial.printf ("Go to position %d request\n", position);
         } else if (doc["cmd"] == "stop") {
             Serial.printf ("Stop request\n");
-            sendCommandResp ("stop", true);
+            if (!sendCommandResp ("stop", true)) {
+                DEBUG_WARN ("Error sending stop command response");
+            }
             blindController.requestStop ();
         }
     }
