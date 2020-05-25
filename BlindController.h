@@ -9,7 +9,9 @@
 	#include "WProgram.h"
 #endif
 
+#include <EnigmaIOTNode.h>
 #include <DebounceEvent.h>
+#include <ArduinoJson.h>
 
 typedef struct {
 public:
@@ -36,8 +38,9 @@ typedef enum {
 #if defined ESP8266 || defined ESP32
 #include <functional>
 typedef std::function<void (blindState_t state, uint8_t position)> stateNotify_cb_t;
+typedef std::function<bool (DynamicJsonDocument json)> sendJson_cb;
 #else
-typedef void (*stateNotify_cb_t)(blindState_t state, uint8_t position);
+#error This code only supports ESP8266 or ESP32 platforms
 #endif
 
 class BlindController
@@ -55,7 +58,8 @@ class BlindController
 	 time_t blindStartedMoving;
 	 bool movingUp = false;
 	 bool movingDown = false;
-	 stateNotify_cb_t stateNotify_cb;
+	 //stateNotify_cb_t stateNotify_cb;
+	 sendJson_cb sendJson;
 
  public:
 	 void begin (blindControlerHw_t *data);
@@ -70,9 +74,9 @@ class BlindController
 		 return blindState;
 	 }
 	 void loop ();
-	 void setEventManager (stateNotify_cb_t cb) {
-		 stateNotify_cb = cb;
-	 }
+	 //void setEventManager (stateNotify_cb_t cb) {
+		// stateNotify_cb = cb;
+	 //}
 	 char* stateToStr (int state) {
 		 switch (state) {
 		 case rollingUp:
@@ -84,6 +88,10 @@ class BlindController
 		 }
 	 }
 	 void requestStop ();
+	 bool processRxCommand (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding);
+	 void onJsonSend (sendJson_cb cb) {
+		 sendJson = cb;
+	 }
 
 protected:
 	void rollup ();
@@ -96,6 +104,11 @@ protected:
 	}
 	time_t movementToTime (int8_t movement);
 	void sendPosition ();
+/**************/
+	bool sendGetPosition ();
+	bool sendGetStatus ();
+	bool sendCommandResp (const char* command, bool result);
+	void processBlindEvent (blindState_t state, int8_t position);
 };
 
 #endif
