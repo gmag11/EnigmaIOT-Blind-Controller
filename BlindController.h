@@ -9,12 +9,10 @@
 	#include "WProgram.h"
 #endif
 
-#include <EnigmaIOTNode.h>
+#include "EnigmaIOTjsonController.h"
 #include <DebounceEvent.h>
-#include <ArduinoJson.h>
 
-typedef struct {
-public:
+struct blindControlerHw_t {
 	int upRelayPin;
 	int downRelayPin;
 	int upButton;
@@ -22,11 +20,8 @@ public:
 	time_t fullTravellingTime;
 	time_t notifPeriod;
 	time_t keepAlivePeriod;
-	int ON_STATE = HIGH;
-protected:
-	int OFF_STATE = !ON_STATE;
-	friend class BlindController;
-} blindControlerHw_t;
+	int ON_STATE;
+};
 
 typedef enum {
 	rollingUp = 1,
@@ -35,18 +30,23 @@ typedef enum {
 	error = 0
 } blindState_t;
 
+typedef enum {
+	UP_BUTTON,
+	DOWN_BUTTON
+} button_t;
+
 #if defined ESP8266 || defined ESP32
 #include <functional>
-typedef std::function<void (blindState_t state, uint8_t position)> stateNotify_cb_t;
-typedef std::function<bool (DynamicJsonDocument json)> sendJson_cb;
+//typedef std::function<void (blindState_t state, uint8_t position)> stateNotify_cb_t;
 #else
 #error This code only supports ESP8266 or ESP32 platforms
 #endif
 
-class BlindController
+class BlindController : EnigmaIOTjsonController
 {
  protected:
 	 blindControlerHw_t config;
+	 int OFF_STATE;
 	 DebounceEvent* upButton;
      DebounceEvent *downButton;
 	 int8_t position = -1;
@@ -58,56 +58,52 @@ class BlindController
 	 time_t blindStartedMoving;
 	 bool movingUp = false;
 	 bool movingDown = false;
-	 //stateNotify_cb_t stateNotify_cb;
-	 sendJson_cb sendJson;
+	 //sendJson_cb sendJson; // Defined on parent class
 
  public:
-	 void begin (blindControlerHw_t *data);
+	 void begin (/*struct blindControlerHw_t*/void *data);
 	 void begin ();
-	 void fullRollup ();
-	 void fullRolldown ();
-	 bool gotoPosition (int pos);
-	 int8_t getPosition () {
-		 return position;
-	 }
-	 blindState_t getState () {
-		 return blindState;
-	 }
-	 void loop ();
-	 //void setEventManager (stateNotify_cb_t cb) {
-		// stateNotify_cb = cb;
-	 //}
-	 char* stateToStr (int state) {
-		 switch (state) {
-		 case rollingUp:
-			 return "Rolling up";
-		 case rollingDown:
-			 return "Rolling down";
-		 case stopped:
-			 return "Stopped";
-		 }
-	 }
-	 void requestStop ();
 	 bool processRxCommand (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding);
-	 void onJsonSend (sendJson_cb cb) {
-		 sendJson = cb;
-	 }
+	 void loop ();
+	 ~BlindController ();
 
 protected:
 	void rollup ();
 	void rolldown ();
 	void stop ();
+	void fullRollup ();
+	void fullRolldown ();
+	bool gotoPosition (int pos);
+	int8_t getPosition () {
+		return position;
+	}
+	blindState_t getState () {
+		return blindState;
+	}
+	char* stateToStr (int state) {
+		switch (state) {
+		case rollingUp:
+			return "Rolling up";
+		case rollingDown:
+			return "Rolling down";
+		case stopped:
+			return "Stopped";
+		}
+	}
+	void requestStop ();
 	void callbackUpButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length);
 	void callbackDownButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length);
+	bool sendButtonPress (button_t button, int count);
 	int8_t timeToPos (time_t movementTime) {
 		return movementTime * 100 / config.fullTravellingTime;
 	}
 	time_t movementToTime (int8_t movement);
 	void sendPosition ();
-/**************/
+
 	bool sendGetPosition ();
 	bool sendGetStatus ();
 	bool sendCommandResp (const char* command, bool result);
+	bool sendStartAnouncement ();
 	void processBlindEvent (blindState_t state, int8_t position);
 };
 

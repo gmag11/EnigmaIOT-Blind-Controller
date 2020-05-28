@@ -10,6 +10,7 @@
 
 #include <Arduino.h>
 #include <DebounceEvent.h>
+#include "EnigmaIOTjsonController.h"
 #include "BlindController.h"
 
 #include <EnigmaIOTNode.h>
@@ -28,7 +29,19 @@
 
 #define BLUE_LED LED_BUILTIN
 
-BlindController blindController;
+//BlindController blindController;
+EnigmaIOTjsonController *controller;
+
+struct blindControlerHw_t config = {
+    .upRelayPin = 5,
+    .downRelayPin = 4,
+    .upButton = 0,
+    .downButton = 2,
+    .fullTravellingTime = 15000,
+    .notifPeriod = 15000 / 20,
+    .keepAlivePeriod = 15000 * 2,
+    .ON_STATE = HIGH
+};
 
 void connectEventHandler () {
     Serial.println ("Connected");
@@ -38,25 +51,12 @@ void disconnectEventHandler (nodeInvalidateReason_t reason) {
     Serial.printf ("Disconnected. Reason %d", reason);
 }
 
-bool sendJson (DynamicJsonDocument json) {
-    int len = measureMsgPack (json) + 1;
-    uint8_t* buffer = (uint8_t*)malloc (len);
-    len = serializeMsgPack (json, (char*)buffer, len);
-
-    Serial.printf ("Trying to send: %s\n", printHexBuffer (
-        buffer, len));
-    bool result = EnigmaIOTNode.sendData (buffer, len, MSG_PACK);
-    if (!result) {
-        DEBUG_WARN ("---- Error sending data");
-    } else {
-        DEBUG_WARN ("---- Data sent");
-    }
-    free (buffer);
-    return result;
+bool sendUplinkData (const uint8_t* data, size_t len, nodePayloadEncoding_t payloadEncoding) {
+    return EnigmaIOTNode.sendData (data, len, payloadEncoding);
 }
 
 void processRxData (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding) {
-    if (blindController.processRxCommand (mac, buffer, length, command, payloadEncoding)) {
+    if (controller->processRxCommand (mac, buffer, length, command, payloadEncoding)) {
         DEBUG_INFO ("Command processed");
     } else {
         DEBUG_WARN ("Command error");
@@ -69,6 +69,8 @@ void setup() {
     delay (1000);
     Serial.println ();
 
+    controller = (EnigmaIOTjsonController*)new BlindController ();
+
     EnigmaIOTNode.setLed (BLUE_LED);
     //pinMode (BLUE_LED, OUTPUT);
     //digitalWrite (BLUE_LED, HIGH); // Turn on LED
@@ -78,13 +80,12 @@ void setup() {
 
     EnigmaIOTNode.begin (&Espnow_hal, NULL, NULL, true, false);
 
-    blindController.onJsonSend (sendJson);
-    blindController.begin ();
-
+    controller->sendDataCallback (sendUplinkData);
+    controller->begin (&config);
 }
 
 
 void loop() {
-    blindController.loop ();
+    controller->loop ();
     EnigmaIOTNode.handle ();
 }
