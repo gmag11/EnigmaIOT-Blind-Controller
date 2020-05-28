@@ -29,7 +29,6 @@
 
 #define BLUE_LED LED_BUILTIN
 
-//BlindController blindController;
 EnigmaIOTjsonController *controller;
 
 struct blindControlerHw_t config = {
