@@ -19,6 +19,21 @@ constexpr auto NOTIF_PERIOD_RATIO = 20;
 constexpr auto KEEP_ALIVE_PERIOD_RATIO = 2;
 
 const char* commandKey = "cmd";
+const char* positionCommandValue = "pos";
+const char* stateCommandValue = "state";
+const char* fullUpCommandValue = "uu";
+const char* fullDownCommandValue = "dd";
+const char* gotoCommandValue = "go";
+const char* stopCommandValue = "stop";
+const char* startCommandValue = "start";
+const char* resultKey = "res";
+const char* positionKey = "pos";
+const char* memKey = "mem";
+const char* eventValue = "event";
+const char* buttonKey = "but";
+const char* upButtonValue = "up";
+const char* downButtonValue = "down";
+const char* countNumberKey = "num";
 
 
 bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding) {
@@ -46,13 +61,13 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 	Serial.println ();
 
 	if (command == nodeMessageType_t::DOWNSTREAM_DATA_GET) {
-		if (!strcmp(doc[commandKey],"pos")) {
+		if (!strcmp(doc[commandKey], positionCommandValue)) {
 			Serial.printf ("Position = %d\n", getPosition ());
 			if (!sendGetPosition ()) {
 				DEBUG_WARN ("Error sending get position command response");
 				return false;
 			}
-		} else if (doc[commandKey] == "state") {
+		} else if (!strcmp (doc[commandKey], stateCommandValue)) {
 			Serial.printf ("Status = %d\n", getState ());
 			if (!sendGetStatus ()) {
 				DEBUG_WARN ("Error sending get state command response");
@@ -60,36 +75,36 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 			}
 		}
 	} else {
-		if (doc[commandKey] == "uu") { // Command full rollup
+		if (!strcmp (doc[commandKey], fullUpCommandValue)) { // Command full rollup
 			Serial.printf ("Full up request\n");
-			if (!sendCommandResp ("uu", true)) {
+			if (!sendCommandResp (fullUpCommandValue, true)) {
 				DEBUG_WARN ("Error sending Full rollup command response");
 				return false;
 			}
 			fullRollup ();
-		} else if (doc["cmd"] == "dd") { // Command full rolldown
+		} else if (!strcmp (doc[commandKey], fullDownCommandValue)) { // Command full rolldown
 			Serial.printf ("Full down request\n");
-			if (!sendCommandResp ("dd", true)) {
+			if (!sendCommandResp (fullDownCommandValue, true)) {
 				DEBUG_WARN ("Error sending Full rolldown command response");
 				return false;
 			}
 			fullRolldown ();
-		} else if (doc["cmd"] == "go") { // Command go to position
-			if (!doc.containsKey ("pos")) {
-				if (!sendCommandResp ("go", false)) {
+		} else if (!strcmp (doc[commandKey], gotoCommandValue)) { // Command go to position
+			if (!doc.containsKey (positionKey)) {
+				if (!sendCommandResp (gotoCommandValue, false)) { // ??????
 					DEBUG_WARN ("Error sending go command response");
 				}
 				return false;
 			}
-			int position = doc["pos"];
-			if (!sendCommandResp ("go", gotoPosition (position))) {
+			int position = doc[positionKey];
+			if (!sendCommandResp (gotoCommandValue, gotoPosition (position))) {
 				DEBUG_WARN ("Error sending go command response");
 				return false;
 			}
 			Serial.printf ("Go to position %d request\n", position);
-		} else if (doc["cmd"] == "stop") {
+		} else if (!strcmp (doc[commandKey], stopCommandValue)) {
 			Serial.printf ("Stop request\n");
-			if (!sendCommandResp ("stop", true)) {
+			if (!sendCommandResp (stopCommandValue, true)) {
 				DEBUG_WARN ("Error sending stop command response");
 				return false;
 			}
@@ -103,8 +118,8 @@ bool BlindController::sendGetPosition () {
 	const size_t capacity = JSON_OBJECT_SIZE (2);
 	DynamicJsonDocument json (capacity);
 
-	json["cmd"] = "pos";
-	json["pos"] = getPosition ();
+	json[commandKey] = positionCommandValue;
+	json[positionKey] = getPosition ();
 
 	return sendJson (json);
 }
@@ -113,9 +128,9 @@ bool BlindController::sendGetStatus () {
 	const size_t capacity = JSON_OBJECT_SIZE (3);
 	DynamicJsonDocument json (capacity);
 
-	json["cmd"] = "state";
-	json["state"] = (int)getState ();
-	json["pos"] = getPosition ();
+	json[commandKey] = stateCommandValue;
+	json[stateCommandValue] = (int)getState ();
+	json[positionKey] = getPosition ();
 
 	return sendJson (json);
 }
@@ -124,8 +139,8 @@ bool BlindController::sendCommandResp (const char* command, bool result) {
 	const size_t capacity = JSON_OBJECT_SIZE (2);
 	DynamicJsonDocument json (capacity);
 
-	json["cmd"] = command;
-	json["res"] = (int)result;
+	json[commandKey] = command;
+	json[resultKey] = (int)result;
 
 	return sendJson (json);
 }
@@ -136,9 +151,9 @@ void BlindController::processBlindEvent (blindState_t state, int8_t position) {
 	const size_t capacity = JSON_OBJECT_SIZE (5);
 	DynamicJsonDocument json (capacity);
 
-	json["state"] = (int)state;
-	json["pos"] = position;
-	json["mem"] = ESP.getFreeHeap ();
+	json[stateCommandValue] = (int)state;
+	json[positionKey] = position;
+	json[memKey] = ESP.getFreeHeap ();
 
 	sendJson (json);
 }
@@ -147,12 +162,12 @@ bool BlindController::sendButtonPress (button_t button, int count) {
 	const size_t capacity = JSON_OBJECT_SIZE (3);
 	DynamicJsonDocument json (capacity);
 
-	json["cmd"] = "event";
+	json[commandKey] = eventValue;
 	if (button == button_t::DOWN_BUTTON)
-		json["but"] = "down";
+		json[buttonKey] = downButtonValue;
 	else
-		json["but"] = "up";
-	json["num"] = (int)count;
+		json[buttonKey] = upButtonValue;
+	json[countNumberKey] = (int)count;
 
 	return sendJson (json);
 }
@@ -161,7 +176,7 @@ bool BlindController::sendStartAnouncement () {
 	const size_t capacity = JSON_OBJECT_SIZE (1);
 	DynamicJsonDocument json (capacity);
 
-	json["cmd"] = "start";
+	json[commandKey] = startCommandValue;
 
 	return sendJson (json);
 }
