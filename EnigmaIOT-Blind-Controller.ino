@@ -35,7 +35,7 @@ struct blindControlerHw_t config = {
     .upRelayPin = 5,
     .downRelayPin = 4,
     .upButton = 0,
-    .downButton = 2,
+    .downButton = 14,
     .fullTravellingTime = 15000,
     .notifPeriod = 15000 / 20,
     .keepAlivePeriod = 15000 * 2,
@@ -71,8 +71,6 @@ void setup() {
     controller = (EnigmaIOTjsonController*)new BlindController ();
 
     EnigmaIOTNode.setLed (BLUE_LED);
-    //pinMode (BLUE_LED, OUTPUT);
-    //digitalWrite (BLUE_LED, HIGH); // Turn on LED
     EnigmaIOTNode.onConnected (connectEventHandler);
     EnigmaIOTNode.onDisconnected (disconnectEventHandler);
     EnigmaIOTNode.onDataRx (processRxData);
