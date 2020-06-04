@@ -31,14 +31,16 @@
 
 EnigmaIOTjsonController *controller;
 
+const auto fullTravelTime = 30000;
+
 struct blindControlerHw_t config = {
-    .upRelayPin = 5,
-    .downRelayPin = 4,
-    .upButton = 0,
-    .downButton = 14,
-    .fullTravellingTime = 15000,
-    .notifPeriod = 15000 / 20,
-    .keepAlivePeriod = 15000 * 2,
+    .upRelayPin = 12,
+    .downRelayPin = 14,
+    .upButton = 4,
+    .downButton = 5,
+    .fullTravellingTime = fullTravelTime,
+    .notifPeriod = 0, // Not used here
+    .keepAlivePeriod = 0, // Not used here
     .ON_STATE = HIGH
 };
 

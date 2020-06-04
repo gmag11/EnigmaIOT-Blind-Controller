@@ -15,8 +15,8 @@ constexpr auto DOWN_BUTTON_PIN = 2;
 constexpr auto UP_RELAY_PIN = 5;
 constexpr auto DOWN_RELAY_PIN = 4;
 constexpr auto ROLLING_TIME = 15000;
-constexpr auto NOTIF_PERIOD_RATIO = 20;
-constexpr auto KEEP_ALIVE_PERIOD_RATIO = 2;
+constexpr auto NOTIF_PERIOD_RATIO = 5;
+constexpr auto KEEP_ALIVE_PERIOD_RATIO = 4;
 
 const char* commandKey = "cmd";
 const char* positionCommandValue = "pos";
