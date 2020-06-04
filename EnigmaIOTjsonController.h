@@ -44,17 +44,23 @@ protected:
 		uint8_t* buffer = (uint8_t*)malloc (len);
 		len = serializeMsgPack (json, (char*)buffer, len);
 
-		Serial.printf ("Trying to send: %s\n", printHexBuffer (
-			buffer, len));
+		size_t strLen = measureJson (json) + 1;
+		char* strBuffer = (char*)calloc (sizeof(uint8_t), strLen);
+
+		/*Serial.printf ("Trying to send: %s\n", printHexBuffer (
+			buffer, len));*/
+		serializeJson (json, strBuffer, strLen);
+		DEBUG_WARN ("Trying to send: %s", strBuffer);
 		bool result = false;
 		if (sendData)
 			result = sendData (buffer, len, MSG_PACK);
 		if (!result) {
 			DEBUG_WARN ("---- Error sending data");
 		} else {
-			DEBUG_WARN ("---- Data sent");
+			DEBUG_INFO ("---- Data sent");
 		}
 		free (buffer);
+		free (strBuffer);
 		return result;
 	}
 };

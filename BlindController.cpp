@@ -56,19 +56,22 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 		DEBUG_WARN ("Error decoding command: %s", error.c_str ());
 		return false;
 	}
-	Serial.printf ("Command: %d = %s\n", command, command == nodeMessageType_t::DOWNSTREAM_DATA_GET ? "GET" : "SET");
-	serializeJsonPretty (doc, Serial);
-	Serial.println ();
+	DEBUG_WARN ("Command: %d = %s", command, command == nodeMessageType_t::DOWNSTREAM_DATA_GET ? "GET" : "SET");
+	size_t strLen = measureJson (doc) + 1;
+	char* strBuffer = (char*)malloc (strLen);
+	serializeJson (doc, strBuffer, strLen);
+	DEBUG_WARN ("Data: %s", strBuffer);
+	free (strBuffer);
 
 	if (command == nodeMessageType_t::DOWNSTREAM_DATA_GET) {
 		if (!strcmp(doc[commandKey], positionCommandValue)) {
-			Serial.printf ("Position = %d\n", getPosition ());
+			DEBUG_WARN ("Position = %d", getPosition ());
 			if (!sendGetPosition ()) {
 				DEBUG_WARN ("Error sending get position command response");
 				return false;
 			}
 		} else if (!strcmp (doc[commandKey], stateCommandValue)) {
-			Serial.printf ("Status = %d\n", getState ());
+			DEBUG_WARN ("Status = %d", getState ());
 			if (!sendGetStatus ()) {
 				DEBUG_WARN ("Error sending get state command response");
 				return false;
@@ -76,14 +79,14 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 		}
 	} else {
 		if (!strcmp (doc[commandKey], fullUpCommandValue)) { // Command full rollup
-			Serial.printf ("Full up request\n");
+			DEBUG_WARN ("Full up request");
 			if (!sendCommandResp (fullUpCommandValue, true)) {
 				DEBUG_WARN ("Error sending Full rollup command response");
 				return false;
 			}
 			fullRollup ();
 		} else if (!strcmp (doc[commandKey], fullDownCommandValue)) { // Command full rolldown
-			Serial.printf ("Full down request\n");
+			DEBUG_WARN ("Full down request");
 			if (!sendCommandResp (fullDownCommandValue, true)) {
 				DEBUG_WARN ("Error sending Full rolldown command response");
 				return false;
@@ -101,9 +104,9 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 				DEBUG_WARN ("Error sending go command response");
 				return false;
 			}
-			Serial.printf ("Go to position %d request\n", position);
+			DEBUG_WARN ("Go to position %d request", position);
 		} else if (!strcmp (doc[commandKey], stopCommandValue)) {
-			Serial.printf ("Stop request\n");
+			DEBUG_WARN ("Stop request");
 			if (!sendCommandResp (stopCommandValue, true)) {
 				DEBUG_WARN ("Error sending stop command response");
 				return false;
@@ -146,7 +149,7 @@ bool BlindController::sendCommandResp (const char* command, bool result) {
 }
 
 void BlindController::processBlindEvent (blindState_t state, int8_t position) {
-	Serial.printf ("State: %s. Position %d\n", stateToStr (state), position);
+	DEBUG_WARN ("State: %s. Position %d", stateToStr (state), position);
 
 	const size_t capacity = JSON_OBJECT_SIZE (5);
 	DynamicJsonDocument json (capacity);

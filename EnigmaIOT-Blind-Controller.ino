@@ -45,11 +45,11 @@ struct blindControlerHw_t config = {
 };
 
 void connectEventHandler () {
-    Serial.println ("Connected");
+    DEBUG_WARN ("Connected");
 }
 
 void disconnectEventHandler (nodeInvalidateReason_t reason) {
-    Serial.printf ("Disconnected. Reason %d", reason);
+    DEBUG_WARN ("Disconnected. Reason %d", reason);
 }
 
 bool sendUplinkData (const uint8_t* data, size_t len, nodePayloadEncoding_t payloadEncoding) {
