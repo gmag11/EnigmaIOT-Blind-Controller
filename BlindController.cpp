@@ -490,3 +490,19 @@ BlindController::~BlindController () {
 	delete(downButton);
 	sendData = 0;
 }
+
+void BlindController::configManagerStart (EnigmaIOTNodeClass* node) {
+
+}
+
+void BlindController::configManagerExit (bool status) {
+
+}
+
+bool BlindController::loadConfig () {
+
+}
+
+bool BlindController::saveConfig () {
+
+}

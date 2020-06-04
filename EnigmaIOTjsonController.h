@@ -11,6 +11,7 @@
 
 #include <EnigmaIOTNode.h>
 #include <ArduinoJson.h>
+#include <EnigmaIOTNode.h>
 
 
 #if defined ESP8266 || defined ESP32
@@ -24,6 +25,7 @@ class EnigmaIOTjsonController
 {
  protected:
 	 sendData_cb sendData;
+	 EnigmaIOTNodeClass* enigmaIotNode;
 
  public:
 	 virtual void begin () = 0;
@@ -35,9 +37,33 @@ class EnigmaIOTjsonController
 		 sendData = cb;
 	 }
 
+	 /**
+	  * @brief Called when wifi manager starts config portal
+	  * @param enigmaIotNode Pointer to EnigmaIOT node instance
+	  */
+	 virtual void configManagerStart (EnigmaIOTNodeClass* node) = 0;
+
+	 /**
+	  * @brief Called when wifi manager exits config portal
+	  * @param status `true` if configuration was successful
+	  */
+	 virtual void configManagerExit (bool status) = 0;
+
+	 /**
+	  * @brief Loads output module configuration
+	  * @return Returns `true` if load was successful. `false` otherwise
+	  */
+	 virtual bool loadConfig () = 0;
+
 protected:
 	virtual bool sendCommandResp (const char* command, bool result) = 0;
 	virtual bool sendStartAnouncement () = 0;
+
+	/**
+	  * @brief Saves output module configuration
+	  * @return Returns `true` if save was successful. `false` otherwise
+	  */
+	virtual bool saveConfig () = 0;
 
 	bool sendJson (DynamicJsonDocument& json) {
 		int len = measureMsgPack (json) + 1;

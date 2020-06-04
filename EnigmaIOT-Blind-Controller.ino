@@ -64,6 +64,14 @@ void processRxData (const uint8_t* mac, const uint8_t* buffer, uint8_t length, n
     }
 }
 
+void wifiManagerExit (boolean status) {
+    controller->configManagerExit (status);
+}
+
+void wifiManagerStarted () {
+    controller->configManagerStart (&EnigmaIOTNode);
+}
+
 
 void setup() {
     Serial.begin (115200);
@@ -76,6 +84,8 @@ void setup() {
     EnigmaIOTNode.onConnected (connectEventHandler);
     EnigmaIOTNode.onDisconnected (disconnectEventHandler);
     EnigmaIOTNode.onDataRx (processRxData);
+    EnigmaIOTNode.onWiFiManagerStarted (wifiManagerStarted);
+    EnigmaIOTNode.onWiFiManagerExit (wifiManagerExit);
 
     EnigmaIOTNode.begin (&Espnow_hal, NULL, NULL, true, false);
 

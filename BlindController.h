@@ -66,8 +66,31 @@ class BlindController : EnigmaIOTjsonController
 	 bool processRxCommand (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding);
 	 void loop ();
 	 ~BlindController ();
+	 /**
+	  * @brief Called when wifi manager starts config portal
+	  * @param enigmaIotGw Pointer to EnigmaIOT gateway instance
+	  */
+	 void configManagerStart (EnigmaIOTNodeClass* node);
+
+	 /**
+	  * @brief Called when wifi manager exits config portal
+	  * @param status `true` if configuration was successful
+	  */
+	 void configManagerExit (bool status);
+
+	 /**
+	  * @brief Loads output module configuration
+	  * @return Returns `true` if load was successful. `false` otherwise
+	  */
+	 bool loadConfig ();
 
 protected:
+	/**
+	  * @brief Saves output module configuration
+	  * @return Returns `true` if save was successful. `false` otherwise
+	  */
+	bool saveConfig ();
+
 	void rollup ();
 	void rolldown ();
 	void stop ();
