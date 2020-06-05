@@ -10,7 +10,7 @@
 
 #include <Arduino.h>
 #include <DebounceEvent.h>
-#include "EnigmaIOTjsonController.h"
+#include <EnigmaIOTjsonController.h>
 #include "BlindController.h"
 
 #include <EnigmaIOTNode.h>
