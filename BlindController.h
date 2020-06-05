@@ -60,6 +60,15 @@ class BlindController : EnigmaIOTjsonController
 	 bool movingDown = false;
 	 //sendJson_cb sendJson; // Defined on parent class
 
+	 AsyncWiFiManagerParameter* upRelayPinParam; ///< @brief Configuration field for up relay pin
+	 AsyncWiFiManagerParameter* downRelayPinParam; ///< @brief Configuration field for down relay pin
+	 AsyncWiFiManagerParameter* upButtonParam; ///< @brief Configuration field for up button pin
+	 AsyncWiFiManagerParameter* downButtonParam; ///< @brief Configuration field for down button pin
+	 AsyncWiFiManagerParameter* fullTravelTimeParam; ///< @brief Configuration field for full travel time
+	 AsyncWiFiManagerParameter* notifPeriodTimeParam; ///< @brief Configuration field for notification period time
+	 AsyncWiFiManagerParameter* keepAlivePeriodTimeParam; ///< @brief Configuration field for keep alive time
+	 AsyncWiFiManagerParameter* onStateParam; ///< @brief Configuration field for on state value for relay pins
+
  public:
 	 void begin (/*struct blindControlerHw_t*/void *data);
 	 void begin ();
@@ -90,6 +99,9 @@ protected:
 	  * @return Returns `true` if save was successful. `false` otherwise
 	  */
 	bool saveConfig ();
+
+	void defaultConfig ();
+	void configurePins ();
 
 	void rollup ();
 	void rolldown ();

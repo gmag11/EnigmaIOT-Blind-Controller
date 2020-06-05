@@ -10,13 +10,25 @@ using namespace std;
 using namespace placeholders;
 
 // Default values
-constexpr auto UP_BUTTON_PIN = 0;
-constexpr auto DOWN_BUTTON_PIN = 2;
-constexpr auto UP_RELAY_PIN = 5;
-constexpr auto DOWN_RELAY_PIN = 4;
-constexpr auto ROLLING_TIME = 15000;
+//struct blindControlerHw_t config = {
+//    .upRelayPin = 12,
+//    .downRelayPin = 14,
+//    .upButton = 4,
+//    .downButton = 5,
+//    .fullTravellingTime = fullTravelTime,
+//    .notifPeriod = 0, // Not used here
+//    .keepAlivePeriod = 0, // Not used here
+//    .ON_STATE = HIGH
+//};
+
+constexpr auto UP_RELAY_PIN = 12;
+constexpr auto DOWN_RELAY_PIN = 14;
+constexpr auto UP_BUTTON_PIN = 4;
+constexpr auto DOWN_BUTTON_PIN = 3;
+constexpr auto ROLLING_TIME = 30000;
 constexpr auto NOTIF_PERIOD_RATIO = 5;
 constexpr auto KEEP_ALIVE_PERIOD_RATIO = 4;
+constexpr auto ON_STATE_DEFAULT = HIGH;
 
 constexpr auto CONFIG_FILE = "/blindcont.json"; ///< @brief blind controller configuration file name
 
@@ -250,24 +262,34 @@ void BlindController::callbackDownButton (uint8_t pin, uint8_t event, uint8_t co
 
 }
 
+void BlindController::defaultConfig () {
+	config.upRelayPin = UP_RELAY_PIN;
+	config.downRelayPin = DOWN_RELAY_PIN;
+	config.upButton = UP_BUTTON_PIN;
+	config.downButton = DOWN_BUTTON_PIN;
+	config.fullTravellingTime = ROLLING_TIME;
+	config.notifPeriod = config.fullTravellingTime / NOTIF_PERIOD_RATIO;
+	config.keepAlivePeriod = config.fullTravellingTime * KEEP_ALIVE_PERIOD_RATIO;
+	config.ON_STATE = ON_STATE_DEFAULT;
+}
+
 void BlindController::begin (void* data) {
 	blindControlerHw_t *data_p = (blindControlerHw_t*)data;
 
-	config.downButton = data_p->downButton;
-	config.downRelayPin = data_p->downRelayPin;
-	config.fullTravellingTime = data_p->fullTravellingTime;
-	config.ON_STATE = data_p->ON_STATE;
-	OFF_STATE = !config.ON_STATE;
-	config.upButton = data_p->upButton;
-	config.upRelayPin = data_p->upRelayPin;
-	config.keepAlivePeriod = config.fullTravellingTime * KEEP_ALIVE_PERIOD_RATIO;
-	config.notifPeriod = config.fullTravellingTime / NOTIF_PERIOD_RATIO;
+	if (data_p) {
+		DEBUG_WARN ("Load user config from parameter. Not using stored data");
+		config.downButton = data_p->downButton;
+		config.downRelayPin = data_p->downRelayPin;
+		config.fullTravellingTime = data_p->fullTravellingTime;
+		config.ON_STATE = data_p->ON_STATE;
+		OFF_STATE = !config.ON_STATE;
+		config.upButton = data_p->upButton;
+		config.upRelayPin = data_p->upRelayPin;
+		config.keepAlivePeriod = config.fullTravellingTime * KEEP_ALIVE_PERIOD_RATIO;
+		config.notifPeriod = config.fullTravellingTime / NOTIF_PERIOD_RATIO;
+	}
 
-	upButton = new DebounceEvent (config.upButton, std::bind (&BlindController::callbackUpButton, this, _1, _2, _3, _4), BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH | BUTTON_SET_PULLUP, 50, 500);
-	downButton = new DebounceEvent (config.downButton, std::bind (&BlindController::callbackDownButton, this, _1, _2, _3, _4), BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH | BUTTON_SET_PULLUP, 50, 500);
-
-	pinMode (config.upRelayPin, OUTPUT);
-	pinMode (config.downRelayPin, OUTPUT);
+	configurePins ();
 
 	sendStartAnouncement ();
 
@@ -275,18 +297,18 @@ void BlindController::begin (void* data) {
 
 }
 
-void BlindController::begin () {
-	blindControlerHw_t defaultConfig;
+void BlindController::configurePins () {
+	if (upButton) {
+		delete(upButton);
+	}
+	if (downButton) {
+		delete(downButton);
+	}
+	upButton = new DebounceEvent (config.upButton, std::bind (&BlindController::callbackUpButton, this, _1, _2, _3, _4), BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH | BUTTON_SET_PULLUP, 50, 500);
+	downButton = new DebounceEvent (config.downButton, std::bind (&BlindController::callbackDownButton, this, _1, _2, _3, _4), BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH | BUTTON_SET_PULLUP, 50, 500);
 
-	defaultConfig.downButton = DOWN_BUTTON_PIN;
-	defaultConfig.downRelayPin = DOWN_RELAY_PIN;
-	defaultConfig.fullTravellingTime = ROLLING_TIME;
-	defaultConfig.upButton = UP_BUTTON_PIN;
-	defaultConfig.upRelayPin = UP_RELAY_PIN;
-
-	DEBUG_INFO ("Call default begin");
-
-	begin (&defaultConfig);
+	pinMode (config.upRelayPin, OUTPUT);
+	pinMode (config.downRelayPin, OUTPUT);
 }
 
 void BlindController::fullRollup () {
@@ -494,11 +516,91 @@ BlindController::~BlindController () {
 }
 
 void BlindController::configManagerStart (EnigmaIOTNodeClass* node) {
+	enigmaIotNode = node;
 
+	char upRelayStr[10];
+	itoa (config.upRelayPin, upRelayStr, 10);
+	upRelayPinParam = new AsyncWiFiManagerParameter ("upRelayPinParam", "Up Relay Pin", upRelayStr, 10, "required type=\"number\" min=\"0\" max=\"16\" step=\"1\"");
+
+	char downRelayStr[10];
+	itoa (config.downRelayPin, downRelayStr, 10);
+	downRelayPinParam = new AsyncWiFiManagerParameter ("downRelayPinParam", "Down Relay Pin", downRelayStr, 10, "required type=\"number\" min=\"0\" max=\"16\" step=\"1\"");
+	
+	char upButtonStr[10];
+	itoa (config.upButton, upButtonStr, 10);
+	upButtonParam = new AsyncWiFiManagerParameter ("upButtonParam", "Up Button Pin", upButtonStr, 10, "required type=\"number\" min=\"0\" max=\"16\" step=\"1\"");
+	
+	char downButtonStr[10];
+	itoa (config.downButton, downButtonStr, 10);
+	downButtonParam = new AsyncWiFiManagerParameter ("downButtonParam", "Down Button Pin", downButtonStr, 10, "required type=\"number\" min=\"0\" max=\"16\" step=\"1\"");
+	
+	char fullTravelTimeParamStr[10];
+	itoa (config.fullTravellingTime/1000, fullTravelTimeParamStr, 10);
+	fullTravelTimeParam = new AsyncWiFiManagerParameter ("fullTravelTimeParam", "Full Travel Time", fullTravelTimeParamStr, 10, "required type=\"number\" min=\"0\" max=\"3600\" step=\"1\"");
+	
+	char notifPeriodTimeStr[10];
+	itoa (config.notifPeriod/1000, notifPeriodTimeStr, 10);
+	notifPeriodTimeParam = new AsyncWiFiManagerParameter ("notifPeriodTimeParam", "Notification Period", notifPeriodTimeStr, 10, "required type=\"number\" min=\"0\" max=\"3600\" step=\"1\"");
+
+	char keepAlivePeriodTimeStr[10];
+	itoa (config.keepAlivePeriod / 1000, keepAlivePeriodTimeStr, 10);
+	keepAlivePeriodTimeParam = new AsyncWiFiManagerParameter ("keepAlivePeriodTimeParam", "Keep Alive Period", keepAlivePeriodTimeStr, 10, "required type=\"number\" min=\"0\" max=\"3600\" step=\"1\"");
+
+	char onStateStr[10];
+	itoa (config.notifPeriod / 1000, onStateStr, 10);
+	onStateParam = new AsyncWiFiManagerParameter ("onStateParam", "Relay Pin On State", onStateStr, 10, "required type=\"number\" min=\"0\" max=\"1\" step=\"1\"");
+
+	
+
+	enigmaIotNode->addWiFiManagerParameter (upRelayPinParam);
+	enigmaIotNode->addWiFiManagerParameter (downRelayPinParam);
+	enigmaIotNode->addWiFiManagerParameter (upButtonParam);
+	enigmaIotNode->addWiFiManagerParameter (downButtonParam);
+	enigmaIotNode->addWiFiManagerParameter (fullTravelTimeParam);
+	enigmaIotNode->addWiFiManagerParameter (notifPeriodTimeParam);
+	enigmaIotNode->addWiFiManagerParameter (keepAlivePeriodTimeParam);
+	enigmaIotNode->addWiFiManagerParameter (onStateParam);
 }
 
 void BlindController::configManagerExit (bool status) {
+	DEBUG_DBG ("==== Blind Controller Configuration result ====");
+	DEBUG_DBG ("Up Relay pin: %s", upRelayPinParam->getValue());
+	DEBUG_DBG ("Down Relay pin: %s", downRelayPinParam->getValue ());
+	DEBUG_DBG ("Up Button pin: %s", upButtonParam->getValue ());
+	DEBUG_DBG ("Down Button pin: %s", downButtonParam->getValue ());
+	DEBUG_DBG ("Full travelling time: %s ms", fullTravelTimeParam->getValue ());
+	DEBUG_DBG ("Notification period time: %s", notifPeriodTimeParam->getValue ());
+	DEBUG_DBG ("Keep Alive period time: %s", keepAlivePeriodTimeParam->getValue ());
+	DEBUG_DBG ("On Relay state: %s", onStateParam->getValue ());
 
+	if (status) {
+		config.upRelayPin = atoi (upRelayPinParam->getValue ());
+		config.downRelayPin = atoi (downRelayPinParam->getValue ());
+		config.upButton = atoi (upButtonParam->getValue ());
+		config.downButton = atoi (downButtonParam->getValue ());
+		config.fullTravellingTime = atoi (fullTravelTimeParam->getValue ());
+		config.notifPeriod = atoi (notifPeriodTimeParam->getValue ());
+		config.keepAlivePeriod = atoi (keepAlivePeriodTimeParam->getValue ());
+		config.ON_STATE = atoi (onStateParam->getValue ());
+
+
+		if (!saveConfig ()) {
+			DEBUG_ERROR ("Error writting MQTT config to filesystem.");
+		} else {
+			DEBUG_INFO ("Configuration stored");
+		}
+	} else {
+		DEBUG_DBG ("Configuration does not need to be saved");
+	}
+
+	delete (upRelayPinParam);
+	delete (downRelayPinParam);
+	delete (upButtonParam);
+	delete (downButtonParam);
+	delete (fullTravelTimeParam);
+	delete (notifPeriodTimeParam);
+	delete (keepAlivePeriodTimeParam);
+	delete (onStateParam);
 }
 
 bool BlindController::loadConfig () {
@@ -558,7 +660,7 @@ bool BlindController::loadConfig () {
 
 			size_t jsonLen = measureJsonPretty (doc) + 1;
 			char *output=(char*)malloc(jsonLen);
-			serializeJsonPretty (doc, output);
+			serializeJsonPretty (doc, output, jsonLen);
 
 			DEBUG_DBG ("JSON file %s", output.c_str ());
 
@@ -608,7 +710,7 @@ bool BlindController::saveConfig () {
 
 	size_t jsonLen = measureJsonPretty (doc) + 1;
 	char* output = (char*)malloc (jsonLen);
-	serializeJsonPretty (doc, output);
+	serializeJsonPretty (doc, output, jsonLen);
 
 	DEBUG_DBG ("%s", output.c_str ());
 

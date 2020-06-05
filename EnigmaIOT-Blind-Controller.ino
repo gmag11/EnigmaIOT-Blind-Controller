@@ -32,17 +32,18 @@
 EnigmaIOTjsonController *controller;
 
 const auto fullTravelTime = 30000;
+#define RESET_PIN 13
 
-struct blindControlerHw_t config = {
-    .upRelayPin = 12,
-    .downRelayPin = 14,
-    .upButton = 4,
-    .downButton = 5,
-    .fullTravellingTime = fullTravelTime,
-    .notifPeriod = 0, // Not used here
-    .keepAlivePeriod = 0, // Not used here
-    .ON_STATE = HIGH
-};
+//struct blindControlerHw_t config = {
+//    .upRelayPin = 12,
+//    .downRelayPin = 14,
+//    .upButton = 4,
+//    .downButton = 5,
+//    .fullTravellingTime = fullTravelTime,
+//    .notifPeriod = 0, // Not used here
+//    .keepAlivePeriod = 0, // Not used here
+//    .ON_STATE = HIGH
+//};
 
 void connectEventHandler () {
     DEBUG_WARN ("Connected");
@@ -81,16 +82,21 @@ void setup() {
     controller = (EnigmaIOTjsonController*)new BlindController ();
 
     EnigmaIOTNode.setLed (BLUE_LED);
+    EnigmaIOTNode.setResetPin (RESET_PIN);
     EnigmaIOTNode.onConnected (connectEventHandler);
     EnigmaIOTNode.onDisconnected (disconnectEventHandler);
     EnigmaIOTNode.onDataRx (processRxData);
     EnigmaIOTNode.onWiFiManagerStarted (wifiManagerStarted);
     EnigmaIOTNode.onWiFiManagerExit (wifiManagerExit);
 
+    if (!controller->loadConfig ()) {
+        DEBUG_WARN ("Error reading config file");
+    }
+
     EnigmaIOTNode.begin (&Espnow_hal, NULL, NULL, true, false);
 
     controller->sendDataCallback (sendUplinkData);
-    controller->begin (&config);
+    controller->begin ();
 }
 
 

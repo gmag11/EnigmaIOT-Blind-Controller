@@ -28,8 +28,7 @@ class EnigmaIOTjsonController
 	 EnigmaIOTNodeClass* enigmaIotNode;
 
  public:
-	 virtual void begin () = 0;
-	 virtual void begin (void* config) = 0;
+	 virtual void begin (void* config = NULL) = 0;
 	 virtual void loop () = 0;
 	 virtual bool processRxCommand (
 		 const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding) = 0;
