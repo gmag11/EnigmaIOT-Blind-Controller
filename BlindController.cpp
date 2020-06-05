@@ -18,6 +18,8 @@ constexpr auto ROLLING_TIME = 15000;
 constexpr auto NOTIF_PERIOD_RATIO = 5;
 constexpr auto KEEP_ALIVE_PERIOD_RATIO = 4;
 
+constexpr auto CONFIG_FILE = "/blindcont.json"; ///< @brief blind controller configuration file name
+
 const char* commandKey = "cmd";
 const char* positionCommandValue = "pos";
 const char* stateCommandValue = "state";
@@ -500,7 +502,76 @@ void BlindController::configManagerExit (bool status) {
 }
 
 bool BlindController::loadConfig () {
+	//SPIFFS.remove (CONFIG_FILE); // Only for testing
+	bool json_correct = false;
 
+	if (!SPIFFS.begin ()) {
+		DEBUG_WARN ("Error starting filesystem. Formatting");
+		SPIFFS.format ();
+	}
+
+	if (SPIFFS.exists (CONFIG_FILE)) {
+		DEBUG_DBG ("Opening %s file", CONFIG_FILE);
+		File configFile = SPIFFS.open (CONFIG_FILE, "r");
+		if (configFile) {
+			size_t size = configFile.size ();
+			DEBUG_DBG ("%s opened. %u bytes", CONFIG_FILE, size);
+			DynamicJsonDocument doc (512);
+			DeserializationError error = deserializeJson (doc, configFile);
+			if (error) {
+				DEBUG_ERROR ("Failed to parse file");
+			} else {
+				DEBUG_DBG ("JSON file parsed");
+			}
+
+			if (doc.containsKey ("upRelayPin") && doc.containsKey ("downRelayPin")
+				&& doc.containsKey ("upButton") && doc.containsKey ("downButton")
+				&& doc.containsKey ("fullTravellingTime") && doc.containsKey ("notifPeriod")
+				&& doc.containsKey ("keepAlivePeriod") && doc.containsKey ("onState")) {
+				json_correct = true;
+			}
+
+			config.upRelayPin = doc["upRelayPin"].as<int> ();
+			config.downRelayPin = doc["downRelayPin"].as<int> ();
+			config.upButton = doc["upButton"].as<int> ();
+			config.downButton = doc["downButton"].as<int> ();
+			config.fullTravellingTime = doc["fullTravellingTime"].as<int> ();
+			config.notifPeriod = doc["notifPeriod"].as<int> ();
+			config.keepAlivePeriod = doc["keepAlivePeriod"].as<int> ();
+			config.ON_STATE = doc["onState"].as<int> ()==1?HIGH:LOW;
+			
+			configFile.close ();
+			if (json_correct) {
+				DEBUG_INFO ("Blind controller configuration successfuly read");
+			} else {
+				DEBUG_WARN ("Blind controller configuration error");
+			}
+			DEBUG_DBG ("==== Blind Controller  Configuration ====");
+			DEBUG_DBG ("Up Relay pin: %s", config.upRelayPin);
+			DEBUG_DBG ("Down Relay pin: %s", config.downRelayPin);
+			DEBUG_DBG ("Up Button pin: %s", config.upButton);
+			DEBUG_DBG ("Down Button pin: %s", config.downButton);
+			DEBUG_DBG ("Full travelling time: %s ms", config.fullTravellingTime);
+			DEBUG_DBG ("Notification period time: %s", config.notifPeriod);
+			DEBUG_DBG ("Keep Alive period time: %s", config.keepAlivePeriod);
+			DEBUG_DBG ("On Relay state: %s", config.ON_STATE);
+
+			size_t jsonLen = measureJsonPretty (doc) + 1;
+			char *output=(char*)malloc(jsonLen);
+			serializeJsonPretty (doc, output);
+
+			DEBUG_DBG ("JSON file %s", output.c_str ());
+
+			free (output);
+
+		} else {
+			DEBUG_WARN ("Error opening %s", CONFIG_FILE);
+		}
+	} else {
+		DEBUG_WARN ("%s do not exist", CONFIG_FILE);
+	}
+
+	return json_correct;
 }
 
 bool BlindController::saveConfig () {
