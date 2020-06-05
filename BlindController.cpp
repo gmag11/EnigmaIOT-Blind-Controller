@@ -575,5 +575,50 @@ bool BlindController::loadConfig () {
 }
 
 bool BlindController::saveConfig () {
+	if (!SPIFFS.begin ()) {
+		DEBUG_WARN ("Error opening filesystem");
+	}
+	DEBUG_DBG ("Filesystem opened");
 
+	File configFile = SPIFFS.open (CONFIG_FILE, "w");
+	if (!configFile) {
+		DEBUG_WARN ("Failed to open config file %s for writing", CONFIG_FILE);
+		return false;
+	} else {
+		DEBUG_DBG ("%s opened for writting", CONFIG_FILE);
+	}
+
+	DynamicJsonDocument doc (512);
+
+	doc["upRelayPin"] = config.upRelayPin;
+	doc["downRelayPin"] = config.downRelayPin;
+	doc["upButton"] = config.upButton;
+	doc["downButton"] = config.downButton;
+	doc["fullTravellingTime"] = config.fullTravellingTime;
+	doc["notifPeriod"] = config.notifPeriod;
+	doc["keepAlivePeriod"] = config.keepAlivePeriod;
+	doc["onState"] = config.ON_STATE;
+
+	if (serializeJson (doc, configFile) == 0) {
+		DEBUG_ERROR ("Failed to write to file");
+		configFile.close ();
+		//SPIFFS.remove (CONFIG_FILE);
+		return false;
+	}
+
+	size_t jsonLen = measureJsonPretty (doc) + 1;
+	char* output = (char*)malloc (jsonLen);
+	serializeJsonPretty (doc, output);
+
+	DEBUG_DBG ("%s", output.c_str ());
+
+	free (output);
+
+	configFile.flush ();
+	size_t size = configFile.size ();
+
+	//configFile.write ((uint8_t*)(&mqttgw_config), sizeof (mqttgw_config));
+	configFile.close ();
+	DEBUG_DBG ("Blind controller configuration saved to flash. %u bytes", size);
+	return true;
 }
