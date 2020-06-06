@@ -91,12 +91,15 @@ void setup() {
 
     if (!controller->loadConfig ()) {
         DEBUG_WARN ("Error reading config file");
+        if (SPIFFS.format ())
+            DEBUG_WARN ("SPIFFS Formatted");
     }
 
     EnigmaIOTNode.begin (&Espnow_hal, NULL, NULL, true, false);
 
     controller->sendDataCallback (sendUplinkData);
     controller->begin ();
+    DEBUG_WARN ("END setup");
 }
 
 
