@@ -10,17 +10,6 @@ using namespace std;
 using namespace placeholders;
 
 // Default values
-//struct blindControlerHw_t config = {
-//    .upRelayPin = 12,
-//    .downRelayPin = 14,
-//    .upButton = 4,
-//    .downButton = 5,
-//    .fullTravellingTime = fullTravelTime,
-//    .notifPeriod = 0, // Not used here
-//    .keepAlivePeriod = 0, // Not used here
-//    .ON_STATE = HIGH
-//};
-
 constexpr auto UP_RELAY_PIN = 12;
 constexpr auto DOWN_RELAY_PIN = 14;
 constexpr auto UP_BUTTON_PIN = 4;
@@ -70,22 +59,22 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 		DEBUG_WARN ("Error decoding command: %s", error.c_str ());
 		return false;
 	}
-	DEBUG_WARN ("Command: %d = %s", command, command == nodeMessageType_t::DOWNSTREAM_DATA_GET ? "GET" : "SET");
+	DEBUG_INFO ("Command: %d = %s", command, command == nodeMessageType_t::DOWNSTREAM_DATA_GET ? "GET" : "SET");
 	size_t strLen = measureJson (doc) + 1;
 	char* strBuffer = (char*)malloc (strLen);
 	serializeJson (doc, strBuffer, strLen);
-	DEBUG_WARN ("Data: %s", strBuffer);
+	DEBUG_VERBOSE ("Data: %s", strBuffer);
 	free (strBuffer);
 
 	if (command == nodeMessageType_t::DOWNSTREAM_DATA_GET) {
 		if (!strcmp(doc[commandKey], positionCommandValue)) {
-			DEBUG_WARN ("Position = %d", getPosition ());
+			DEBUG_INFO ("Position = %d", getPosition ());
 			if (!sendGetPosition ()) {
 				DEBUG_WARN ("Error sending get position command response");
 				return false;
 			}
 		} else if (!strcmp (doc[commandKey], stateCommandValue)) {
-			DEBUG_WARN ("Status = %d", getState ());
+			DEBUG_INFO ("Status = %d", getState ());
 			if (!sendGetStatus ()) {
 				DEBUG_WARN ("Error sending get state command response");
 				return false;
@@ -93,14 +82,14 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 		}
 	} else {
 		if (!strcmp (doc[commandKey], fullUpCommandValue)) { // Command full rollup
-			DEBUG_WARN ("Full up request");
+			DEBUG_INFO ("Full up request");
 			if (!sendCommandResp (fullUpCommandValue, true)) {
 				DEBUG_WARN ("Error sending Full rollup command response");
 				return false;
 			}
 			fullRollup ();
 		} else if (!strcmp (doc[commandKey], fullDownCommandValue)) { // Command full rolldown
-			DEBUG_WARN ("Full down request");
+			DEBUG_INFO ("Full down request");
 			if (!sendCommandResp (fullDownCommandValue, true)) {
 				DEBUG_WARN ("Error sending Full rolldown command response");
 				return false;
@@ -114,13 +103,13 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 				return false;
 			}
 			int position = doc[positionKey];
+			DEBUG_INFO ("Go to position %d request", position);
 			if (!sendCommandResp (gotoCommandValue, gotoPosition (position))) {
 				DEBUG_WARN ("Error sending go command response");
 				return false;
 			}
-			DEBUG_WARN ("Go to position %d request", position);
 		} else if (!strcmp (doc[commandKey], stopCommandValue)) {
-			DEBUG_WARN ("Stop request");
+			DEBUG_INFO ("Stop request");
 			if (!sendCommandResp (stopCommandValue, true)) {
 				DEBUG_WARN ("Error sending stop command response");
 				return false;
@@ -163,7 +152,7 @@ bool BlindController::sendCommandResp (const char* command, bool result) {
 }
 
 void BlindController::processBlindEvent (blindState_t state, int8_t position) {
-	DEBUG_WARN ("State: %s. Position %d", stateToStr (state), position);
+	DEBUG_INFO ("State: %s. Position %d", stateToStr (state), position);
 
 	const size_t capacity = JSON_OBJECT_SIZE (5);
 	DynamicJsonDocument json (capacity);
@@ -200,7 +189,7 @@ bool BlindController::sendStartAnouncement () {
 
 
 void BlindController::callbackUpButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length) {
-	DEBUG_WARN ("Up button. Event %d Count %d", event, count);
+	DEBUG_INFO ("Up button. Event %d Count %d", event, count);
 	if (event == EVENT_PRESSED) {
 		sendButtonPress (button_t::UP_BUTTON, count);
 		DEBUG_DBG ("Up button pressed. Count %d", count);
@@ -231,7 +220,7 @@ void BlindController::callbackUpButton (uint8_t pin, uint8_t event, uint8_t coun
 }
 
 void BlindController::callbackDownButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length) {
-	DEBUG_WARN ("Down button. Event %d Count %d", event, count);
+	DEBUG_INFO ("Down button. Event %d Count %d", event, count);
 	if (event == EVENT_PRESSED) {
 		sendButtonPress (button_t::DOWN_BUTTON, count);
 		DEBUG_DBG ("Down button pressed. Count %d", count);
@@ -296,20 +285,20 @@ void BlindController::begin (void* data) {
 
 	configurePins ();
 
-	DEBUG_WARN ("==== Blind Controller Configuration ====");
-	DEBUG_WARN ("Up Relay pin: %d", config.upRelayPin);
-	DEBUG_WARN ("Down Relay pin: %d", config.downRelayPin);
-	DEBUG_WARN ("Up Button pin: %d", config.upButton);
-	DEBUG_WARN ("Down Button pin: %d", config.downButton);
-	DEBUG_WARN ("Full travelling time: %d ms", config.fullTravellingTime);
-	DEBUG_WARN ("Notification period time: %d ms",config.notifPeriod);
-	DEBUG_WARN ("Keep Alive period time: %d ms", config.keepAlivePeriod);
-	DEBUG_WARN ("On Relay state: %s", config.ON_STATE?"HIGH":"LOW");
+	DEBUG_INFO ("==== Blind Controller Configuration ====");
+	DEBUG_INFO ("Up Relay pin: %d", config.upRelayPin);
+	DEBUG_INFO ("Down Relay pin: %d", config.downRelayPin);
+	DEBUG_INFO ("Up Button pin: %d", config.upButton);
+	DEBUG_INFO ("Down Button pin: %d", config.downButton);
+	DEBUG_INFO ("Full travelling time: %d ms", config.fullTravellingTime);
+	DEBUG_INFO ("Notification period time: %d ms",config.notifPeriod);
+	DEBUG_INFO ("Keep Alive period time: %d ms", config.keepAlivePeriod);
+	DEBUG_INFO ("On Relay state: %s", config.ON_STATE?"HIGH":"LOW");
 
 
 	sendStartAnouncement ();
 
-	DEBUG_WARN ("Finish begin");
+	DEBUG_DBG ("Finish begin");
 
 }
 
@@ -360,7 +349,7 @@ bool BlindController::gotoPosition (int pos) {
 	positionRequest = pos;
 	if (pos > currentPosition) {
 		blindState = rollingUp;
-		DEBUG_WARN ("--- STATE: Rolling up to position %d", pos);
+		DEBUG_INFO ("--- STATE: Rolling up to position %d", pos);
 		if (pos < 100) {
 			travellingTime = movementToTime (pos - position);
 		} else {
@@ -368,14 +357,14 @@ bool BlindController::gotoPosition (int pos) {
 		}
 	} else if (pos < currentPosition) {
 		blindState = rollingDown;
-		DEBUG_WARN ("--- STATE: Rolling down to position %d", pos);
+		DEBUG_INFO ("--- STATE: Rolling down to position %d", pos);
 		if (pos > 0) {
 			travellingTime = movementToTime (position - pos);
 		} else {
 			fullRolldown ();
 		}
 	} else {
-		DEBUG_WARN ("Requested = Current position");
+		DEBUG_INFO ("Requested = Current position");
 		processBlindEvent (blindState, position);
 	}
 	return true;
@@ -579,15 +568,15 @@ void BlindController::configManagerStart (EnigmaIOTNodeClass* node) {
 }
 
 void BlindController::configManagerExit (bool status) {
-	DEBUG_WARN ("==== Blind Controller Configuration result ====");
-	//DEBUG_WARN ("Up Relay pin: %s", upRelayPinParam->getValue());
-	//DEBUG_WARN ("Down Relay pin: %s", downRelayPinParam->getValue ());
-	//DEBUG_WARN ("Up Button pin: %s", upButtonParam->getValue ());
-	//DEBUG_WARN ("Down Button pin: %s", downButtonParam->getValue ());
-	DEBUG_WARN ("Full travelling time: %s s", fullTravelTimeParam->getValue ());
-	//DEBUG_WARN ("Notification period time: %s s", notifPeriodTimeParam->getValue ());
-	//DEBUG_WARN ("Keep Alive period time: %s s", keepAlivePeriodTimeParam->getValue ());
-	//DEBUG_WARN ("On Relay state: %s", onStateParam->getValue ());
+	DEBUG_INFO ("==== Blind Controller Configuration result ====");
+	//DEBUG_INFO ("Up Relay pin: %s", upRelayPinParam->getValue());
+	//DEBUG_INFO ("Down Relay pin: %s", downRelayPinParam->getValue ());
+	//DEBUG_INFO ("Up Button pin: %s", upButtonParam->getValue ());
+	//DEBUG_INFO ("Down Button pin: %s", downButtonParam->getValue ());
+	DEBUG_INFO ("Full travelling time: %s s", fullTravelTimeParam->getValue ());
+	//DEBUG_INFO ("Notification period time: %s s", notifPeriodTimeParam->getValue ());
+	//DEBUG_INFO ("Keep Alive period time: %s s", keepAlivePeriodTimeParam->getValue ());
+	//DEBUG_INFO ("On Relay state: %s", onStateParam->getValue ());
 
 	if (status) {
 		//config.upRelayPin = atoi (upRelayPinParam->getValue ());
@@ -603,7 +592,7 @@ void BlindController::configManagerExit (bool status) {
 		if (!saveConfig ()) {
 			DEBUG_ERROR ("Error writting blind controller config to filesystem.");
 		} else {
-			DEBUG_WARN ("Configuration stored");
+			DEBUG_INFO ("Configuration stored");
 		}
 	} else {
 		DEBUG_WARN ("Configuration does not need to be saved");
@@ -618,7 +607,7 @@ void BlindController::configManagerExit (bool status) {
 	//free (keepAlivePeriodTimeParam);
 	//free (onStateParam);
 
-	DEBUG_WARN ("Finish exit config manager");
+	DEBUG_DBG ("Finish exit config manager");
 }
 
 bool BlindController::loadConfig () {
@@ -631,17 +620,17 @@ bool BlindController::loadConfig () {
 	}
 
 	if (SPIFFS.exists (CONFIG_FILE)) {
-		DEBUG_WARN ("Opening %s file", CONFIG_FILE);
+		DEBUG_INFO ("Opening %s file", CONFIG_FILE);
 		File configFile = SPIFFS.open (CONFIG_FILE, "r");
 		if (configFile) {
 			size_t size = configFile.size ();
-			DEBUG_WARN ("%s opened. %u bytes", CONFIG_FILE, size);
+			DEBUG_DBG ("%s opened. %u bytes", CONFIG_FILE, size);
 			DynamicJsonDocument doc (512);
 			DeserializationError error = deserializeJson (doc, configFile);
 			if (error) {
 				DEBUG_ERROR ("Failed to parse file");
 			} else {
-				DEBUG_WARN ("JSON file parsed");
+				DEBUG_DBG ("JSON file parsed");
 			}
 
 			if (/*doc.containsKey ("upRelayPin") && doc.containsKey ("downRelayPin")
@@ -666,21 +655,21 @@ bool BlindController::loadConfig () {
 			} else {
 				DEBUG_WARN ("Blind controller configuration error");
 			}
-			DEBUG_WARN ("==== Blind Controller  Configuration ====");
-			//DEBUG_WARN ("Up Relay pin: %d", config.upRelayPin);
-			//DEBUG_WARN ("Down Relay pin: %d", config.downRelayPin);
-			//DEBUG_WARN ("Up Button pin: %d", config.upButton);
-			//DEBUG_WARN ("Down Button pin: %d", config.downButton);
-			DEBUG_WARN ("Full travelling time: %d ms", config.fullTravellingTime);
-			//DEBUG_WARN ("Notification period time: %d ms", config.notifPeriod);
-			//DEBUG_WARN ("Keep Alive period time: %dms ", config.keepAlivePeriod);
-			//DEBUG_WARN ("On Relay state: %d", config.ON_STATE);
+			DEBUG_INFO ("==== Blind Controller  Configuration ====");
+			//DEBUG_INFO ("Up Relay pin: %d", config.upRelayPin);
+			//DEBUG_INFO ("Down Relay pin: %d", config.downRelayPin);
+			//DEBUG_INFO ("Up Button pin: %d", config.upButton);
+			//DEBUG_INFO ("Down Button pin: %d", config.downButton);
+			DEBUG_INFO ("Full travelling time: %d ms", config.fullTravellingTime);
+			//DEBUG_INFO ("Notification period time: %d ms", config.notifPeriod);
+			//DEBUG_INFO ("Keep Alive period time: %dms ", config.keepAlivePeriod);
+			//DEBUG_INFO ("On Relay state: %d", config.ON_STATE);
 
 			size_t jsonLen = measureJsonPretty (doc) + 1;
 			char *output=(char*)malloc(jsonLen);
 			size_t resultlen = serializeJsonPretty (doc, output, jsonLen);
 
-			DEBUG_WARN ("%s \n %d bytes - %d malloc", output, resultlen, jsonLen);
+			DEBUG_DBG ("File content:\n%s", output);
 
 			free (output);
 
@@ -700,14 +689,14 @@ bool BlindController::saveConfig () {
 	if (!SPIFFS.begin ()) {
 		DEBUG_WARN ("Error opening filesystem");
 	}
-	DEBUG_WARN ("Filesystem opened");
+	DEBUG_INFO ("Filesystem opened");
 
 	File configFile = SPIFFS.open (CONFIG_FILE, "w");
 	if (!configFile) {
 		DEBUG_WARN ("Failed to open config file %s for writing", CONFIG_FILE);
 		return false;
 	} else {
-		DEBUG_WARN ("%s opened for writting", CONFIG_FILE);
+		DEBUG_DBG ("%s opened for writting", CONFIG_FILE);
 	}
 
 	DynamicJsonDocument doc (512);
@@ -732,7 +721,7 @@ bool BlindController::saveConfig () {
 	char* output = (char*)malloc (jsonLen);
 	size_t resultlen = serializeJsonPretty (doc, output, jsonLen);
 
-	DEBUG_WARN ("%s \n %d bytes - %d malloc", output, resultlen, jsonLen);
+	DEBUG_VERBOSE ("File content:\n%s", output);
 
 	free (output);
 
@@ -741,6 +730,6 @@ bool BlindController::saveConfig () {
 
 	//configFile.write ((uint8_t*)(&mqttgw_config), sizeof (mqttgw_config));
 	configFile.close ();
-	DEBUG_WARN ("Blind controller configuration saved to flash. %u bytes", size);
+	DEBUG_INFO ("Blind controller configuration saved to flash. %u bytes", size);
 	return true;
 }

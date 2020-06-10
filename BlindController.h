@@ -70,8 +70,7 @@ class BlindController : EnigmaIOTjsonController
 	 AsyncWiFiManagerParameter* onStateParam; ///< @brief Configuration field for on state value for relay pins
 
  public:
-	 void begin (/*struct blindControlerHw_t*/void *data);
-	 void begin ();
+	 void begin (void *data = NULL);
 	 bool processRxCommand (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding);
 	 void loop ();
 	 ~BlindController ();

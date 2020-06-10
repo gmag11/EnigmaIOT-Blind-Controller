@@ -96,7 +96,7 @@ void setup() {
 
     controller->sendDataCallback (sendUplinkData);
     controller->begin ();
-    DEBUG_WARN ("END setup");
+    DEBUG_DBG ("END setup");
 }
 
 
