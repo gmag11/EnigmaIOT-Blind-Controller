@@ -27,23 +27,17 @@
 #include <Hash.h>
 #include <DNSServer.h>
 
+#define USE_SERIAL // Don't forget to set DEBUG_LEVEL to NONE if serial is disabled
+#ifndef USE_SERIAL
+#define BLUE_LED 3
+#else
 #define BLUE_LED LED_BUILTIN
+#endif // USE_SERIAL
 
 EnigmaIOTjsonController *controller;
 
 const auto fullTravelTime = 30000;
 #define RESET_PIN 13
-
-//struct blindControlerHw_t config = {
-//    .upRelayPin = 12,
-//    .downRelayPin = 14,
-//    .upButton = 4,
-//    .downButton = 5,
-//    .fullTravellingTime = fullTravelTime,
-//    .notifPeriod = 0, // Not used here
-//    .keepAlivePeriod = 0, // Not used here
-//    .ON_STATE = HIGH
-//};
 
 void connectEventHandler () {
     DEBUG_WARN ("Connected");
@@ -75,9 +69,12 @@ void wifiManagerStarted () {
 
 
 void setup() {
+
+#ifdef USE_SERIAL
     Serial.begin (115200);
     delay (1000);
     Serial.println ();
+#endif
 
     controller = (EnigmaIOTjsonController*)new BlindController ();
 
