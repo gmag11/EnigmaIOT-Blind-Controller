@@ -27,7 +27,7 @@
 #include <Hash.h>
 #include <DNSServer.h>
 
-#define USE_SERIAL // Don't forget to set DEBUG_LEVEL to NONE if serial is disabled
+//#define USE_SERIAL // Don't forget to set DEBUG_LEVEL to NONE if serial is disabled
 #ifndef USE_SERIAL
 #define BLUE_LED 3
 #else
