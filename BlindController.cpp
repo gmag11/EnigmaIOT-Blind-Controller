@@ -10,10 +10,10 @@ using namespace std;
 using namespace placeholders;
 
 // Default values
-constexpr auto UP_RELAY_PIN = 12;
-constexpr auto DOWN_RELAY_PIN = 14;
-constexpr auto UP_BUTTON_PIN = 4;
-constexpr auto DOWN_BUTTON_PIN = 5;
+constexpr auto UP_RELAY_PIN = 14;
+constexpr auto DOWN_RELAY_PIN = 12;
+constexpr auto UP_BUTTON_PIN = 5;
+constexpr auto DOWN_BUTTON_PIN = 4;
 constexpr auto ROLLING_TIME = 30000;
 constexpr auto NOTIF_PERIOD_RATIO = 5;
 constexpr auto KEEP_ALIVE_PERIOD_RATIO = 4;
