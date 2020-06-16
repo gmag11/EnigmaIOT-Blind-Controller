@@ -125,6 +125,7 @@ protected:
 		}
 	}
 	void requestStop ();
+	void setTravelTime (int travelTime);
 	void callbackUpButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length);
 	void callbackDownButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length);
 	bool sendButtonPress (button_t button, int count);
@@ -134,6 +135,7 @@ protected:
 	time_t movementToTime (int8_t movement);
 	void sendPosition ();
 
+	bool sendGetTravelTime ();
 	bool sendGetPosition ();
 	bool sendGetStatus ();
 	bool sendCommandResp (const char* command, bool result);

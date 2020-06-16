@@ -29,6 +29,7 @@ const char* fullDownCommandValue = "dd";
 const char* gotoCommandValue = "go";
 const char* stopCommandValue = "stop";
 const char* startCommandValue = "start";
+const char* travelTimeValue = "time";
 const char* resultKey = "res";
 const char* positionKey = "pos";
 const char* memKey = "mem";
@@ -79,8 +80,14 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 				DEBUG_WARN ("Error sending get state command response");
 				return false;
 			}
+		} else if (!strcmp (doc[commandKey], travelTimeValue)) {
+			DEBUG_INFO ("Get travel time request");
+			if (!sendGetTravelTime ()) {
+				DEBUG_WARN ("Error sending get travel time command response");
+				return false;
+			}
 		}
-	} else {
+	} else if (command == nodeMessageType_t::DOWNSTREAM_DATA_SET) {
 		if (!strcmp (doc[commandKey], fullUpCommandValue)) { // Command full rollup
 			DEBUG_INFO ("Full up request");
 			if (!sendCommandResp (fullUpCommandValue, true)) {
@@ -115,7 +122,22 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 				return false;
 			}
 			requestStop ();
+		} else if (!strcmp (doc[commandKey], travelTimeValue)) {
+			DEBUG_INFO ("Set travel time request");
+			if (doc.containsKey (travelTimeValue)) {
+				DEBUG_DBG ("Found time parameter");
+				setTravelTime (doc[travelTimeValue]);
+				if (!sendGetTravelTime ()) {
+					DEBUG_WARN ("Error sending set travel time command response");
+					return false;
+				}
+			} else {
+				DEBUG_WARN ("JSON does not contains %s", travelTimeValue);
+				return false;
+			}
 		}
+
+		
 	}
 	return true;
 }
@@ -129,6 +151,17 @@ bool BlindController::sendGetPosition () {
 
 	return sendJson (json);
 }
+
+bool BlindController::sendGetTravelTime () {
+	const size_t capacity = JSON_OBJECT_SIZE (2);
+	DynamicJsonDocument json (capacity);
+
+	json[commandKey] = positionCommandValue;
+	json[travelTimeValue] = config.fullTravellingTime;
+
+	return sendJson (json);
+}
+
 
 bool BlindController::sendGetStatus () {
 	const size_t capacity = JSON_OBJECT_SIZE (3);
@@ -452,6 +485,14 @@ void BlindController::requestStop () {
 	blindState = stopped;
 	DEBUG_DBG ("--- STATE: Stopped");
 	processBlindEvent (blindState, position);
+}
+
+void BlindController::setTravelTime (int travelTime) {
+	DEBUG_INFO ("Setting travel time to %d", travelTime);
+	config.fullTravellingTime = travelTime;
+	config.keepAlivePeriod = config.fullTravellingTime * KEEP_ALIVE_PERIOD_RATIO;
+	config.notifPeriod = config.fullTravellingTime / NOTIF_PERIOD_RATIO;
+	saveConfig ();
 }
 
 void BlindController::stop () {
