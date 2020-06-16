@@ -156,7 +156,7 @@ bool BlindController::sendGetTravelTime () {
 	const size_t capacity = JSON_OBJECT_SIZE (2);
 	DynamicJsonDocument json (capacity);
 
-	json[commandKey] = positionCommandValue;
+	json[commandKey] = travelTimeValue;
 	json[travelTimeValue] = config.fullTravellingTime;
 
 	return sendJson (json);
