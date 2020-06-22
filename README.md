@@ -28,7 +28,7 @@ Sends a message on every button press and tells about how many times it has been
 
 **Example**
 
-`EnigmaIOT/room_bilnd/data`		`{"cmd":"event","but":"up","num":2}`  ---> Button **up** has been pressed **twice**
+`EnigmaIOT/room_blind/data`		`{"cmd":"event","but":"up","num":2}`  ---> Button **up** has been pressed **twice**
 
 #### Blind position
 
@@ -57,7 +57,7 @@ Blind position is calibrated on every full open or full close command. Until fir
 
 **Example**
 
-`EnigmaIOT/room_bilnd/data`		`{"state":4,"pos":100}`  ---> Blind **stopped** at **fully open** position
+`EnigmaIOT/room_blind/data`		`{"state":4,"pos":100}`  ---> Blind **stopped** at **fully open** position
 
 ## Commands
 
@@ -71,7 +71,7 @@ Ask blind controller to send blind position inmediatelly.
 
 **Example**
 
-`EnigmaIOT/room_bilnd/data`/get		`{"cmd":"pos"}` 
+`EnigmaIOT/room_blind/data`/get		`{"cmd":"pos"}` 
 
 #### Response
 
@@ -87,7 +87,7 @@ Gets configured time required to move blind between extreme positions.
 
 **Example**
 
-`EnigmaIOT/room_bilnd/data`/get		`{"cmd":"time"}` 
+`EnigmaIOT/room_blind/data`/get		`{"cmd":"time"}` 
 
 #### Response
 
@@ -103,7 +103,7 @@ Gets configured time required to move blind between extreme positions.
 
 **Example**
 
-`EnigmaIOT/room_bilnd/data`/set		`{"cmd":"time","time":20}`  ---> Set full blind movement time to 20 seconds.
+`EnigmaIOT/room_blind/data`/set		`{"cmd":"time","time":20}`  ---> Set full blind movement time to 20 seconds.
 
 #### Response
 
@@ -119,7 +119,7 @@ Triggers a full roll up movement.
 
 **Example**
 
-`EnigmaIOT/room_bilnd/data`/set		`{"cmd":"uu"}` 
+`EnigmaIOT/room_blind/data`/set		`{"cmd":"uu"}` 
 
 #### Respose
 
@@ -137,7 +137,7 @@ Triggers a full roll down movement.
 
 **Example**
 
-`EnigmaIOT/room_bilnd/data`/set		`{"cmd":"dd"}` 
+`EnigmaIOT/room_blind/data`/set		`{"cmd":"dd"}` 
 
 #### Respose
 
@@ -155,7 +155,7 @@ Stops blind unconditionally.
 
 **Example**
 
-`EnigmaIOT/room_bilnd/data`/set		`{"cmd":"stop"}` 
+`EnigmaIOT/room_blind/data`/set		`{"cmd":"stop"}` 
 
 #### Respose
 
@@ -175,7 +175,7 @@ Move blind to an arbitrary position between 0 (closed) and 100 (open). Values gr
 
 **Example**
 
-`EnigmaIOT/room_bilnd/data`/set		`{"cmd":"go","pos":50}` ---> Move blind to mid position.
+`EnigmaIOT/room_blind/data`/set		`{"cmd":"go","pos":50}` ---> Move blind to mid position.
 
 #### Respose
 
