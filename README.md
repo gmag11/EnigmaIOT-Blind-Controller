@@ -1,4 +1,4 @@
-# EnigmaIOT-Blind-Controller
+# EnigmaIOT Blind Controller
 
 Actual blind controller node based on EnigmaIOT library. Used to program [Loratap SC511WSC](https://www.loratap.com/sc500w-v2-p0108.html) module or similar ESP8266 based blind controllers.
 
