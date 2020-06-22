@@ -8,6 +8,8 @@ This may be used for blinds, curtains, shades and equivalent devices.
 
 Using a Gateway loaded with [EnigmaIOTGatewayMQTT](https://github.com/gmag11/EnigmaIOT/tree/master/examples/EnigmaIOTGatewayMQTT) example it uses MQTT as interface to send messages and receive commands. Besides standard EnigmaIOT messages and commands this firmware implements these custom ones.
 
+EnigmaIOT network and specific parameters are configured during first start up using WiFi portal on device. Connect to EnigmaIOTNodexxxxxxx AP and open a web browser on http://192.168.4.1.
+
 ## Messages
 
 #### Button actions
@@ -18,7 +20,7 @@ Sends a message on every button press and tells about how many times it has been
 <Network name>/<node name>|<node address>/data {"cmd":"event","but":<"up"|"down">,"num":<number of presses>}
 ```
 
-**Topic**													**Payload**
+**Example**
 
 `EnigmaIOT/room_bilnd/data`		`{"cmd":"event","but":"up","num":2}`  ---> Button **up** has been pressed **twice**
 
@@ -47,7 +49,7 @@ Blind position is sent regularly every some minutes. During movement it is also 
 
 Blind position is calibrated on every full open or full close command. Until first full movement command after botting up position is signaled as unknown.
 
-**Topic**													**Payload**
+**Example**
 
 `EnigmaIOT/room_bilnd/data`		`{"state":4,"pos":100}`  ---> Blind **stopped** at **fully open** position
 
@@ -61,7 +63,7 @@ Ask blind controller to send blind position inmediatelly.
 <Network name>/<node name>|<node address>/data/get {"cmd":"pos"}
 ```
 
-**Topic**															**Payload**
+**Example**
 
 `EnigmaIOT/room_bilnd/data`/get		`{"cmd":"pos"}` 
 
@@ -77,7 +79,7 @@ Gets configured time required to move blind between extreme positions.
 <Network name>/<node name>|<node address>/data/get {"cmd":"time"}
 ```
 
-**Topic**															**Payload**
+**Example**
 
 `EnigmaIOT/room_bilnd/data`/get		`{"cmd":"time"}` 
 
@@ -93,7 +95,7 @@ Gets configured time required to move blind between extreme positions.
 <Network name>/<node name>|<node address>/data/set {"cmd":"time","time":<Full movement time in seconds>}
 ```
 
-**Topic**															**Payload**
+**Example**
 
 `EnigmaIOT/room_bilnd/data`/set		`{"cmd":"time","time":20}`  ---> Set full blind movement time to 20 seconds.
 
@@ -109,7 +111,7 @@ Triggers a full roll up movement.
 <Network name>/<node name>|<node address>/data/set {"cmd":"uu"}
 ```
 
-**Topic**															**Payload**
+**Example**
 
 `EnigmaIOT/room_bilnd/data`/set		`{"cmd":"uu"}` 
 
@@ -127,7 +129,7 @@ Triggers a full roll down movement.
 <Network name>/<node name>|<node address>/data/set {"cmd":"dd"}
 ```
 
-**Topic**															**Payload**
+**Example**
 
 `EnigmaIOT/room_bilnd/data`/set		`{"cmd":"dd"}` 
 
@@ -145,7 +147,7 @@ Stops blind unconditionally.
 <Network name>/<node name>|<node address>/data/set {"cmd":"stop"}
 ```
 
-**Topic**															**Payload**
+**Example**
 
 `EnigmaIOT/room_bilnd/data`/set		`{"cmd":"stop"}` 
 
@@ -165,7 +167,7 @@ Move blind to an arbitrary position between 0 (closed) and 100 (open). Values gr
 <Network name>/<node name>|<node address>/data/set {"cmd":"go","pos":<New position>}
 ```
 
-**Topic**															**Payload**
+**Example**
 
 `EnigmaIOT/room_bilnd/data`/set		`{"cmd":"go","pos":50}` ---> Move blind to mid position.
 
