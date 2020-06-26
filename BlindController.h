@@ -42,55 +42,54 @@ typedef enum {
 #error This code only supports ESP8266 or ESP32 platforms
 #endif
 
-class BlindController : EnigmaIOTjsonController
-{
- protected:
-	 blindControlerHw_t config;
-	 int OFF_STATE;
-	 DebounceEvent* upButton;
-     DebounceEvent *downButton;
-	 int8_t position = -1;
-	 int8_t positionRequest = -1;
-	 int8_t originalPosition;
-	 int8_t finalPosition;
-	 blindState_t blindState = stopped;
-	 time_t travellingTime = -1;
-	 time_t blindStartedMoving;
-	 bool movingUp = false;
-	 bool movingDown = false;
-	 //sendJson_cb sendJson; // Defined on parent class
+class BlindController : EnigmaIOTjsonController {
+protected:
+	blindControlerHw_t config;
+	int OFF_STATE;
+	DebounceEvent* upButton;
+	DebounceEvent* downButton;
+	int8_t position = -1;
+	int8_t positionRequest = -1;
+	int8_t originalPosition;
+	int8_t finalPosition;
+	blindState_t blindState = stopped;
+	time_t travellingTime = -1;
+	time_t blindStartedMoving;
+	bool movingUp = false;
+	bool movingDown = false;
+	//sendJson_cb sendJson; // Defined on parent class
 
-	 AsyncWiFiManagerParameter* upRelayPinParam; ///< @brief Configuration field for up relay pin
-	 AsyncWiFiManagerParameter* downRelayPinParam; ///< @brief Configuration field for down relay pin
-	 AsyncWiFiManagerParameter* upButtonParam; ///< @brief Configuration field for up button pin
-	 AsyncWiFiManagerParameter* downButtonParam; ///< @brief Configuration field for down button pin
-	 AsyncWiFiManagerParameter* fullTravelTimeParam; ///< @brief Configuration field for full travel time
-	 AsyncWiFiManagerParameter* notifPeriodTimeParam; ///< @brief Configuration field for notification period time
-	 AsyncWiFiManagerParameter* keepAlivePeriodTimeParam; ///< @brief Configuration field for keep alive time
-	 AsyncWiFiManagerParameter* onStateParam; ///< @brief Configuration field for on state value for relay pins
+	AsyncWiFiManagerParameter* upRelayPinParam; ///< @brief Configuration field for up relay pin
+	AsyncWiFiManagerParameter* downRelayPinParam; ///< @brief Configuration field for down relay pin
+	AsyncWiFiManagerParameter* upButtonParam; ///< @brief Configuration field for up button pin
+	AsyncWiFiManagerParameter* downButtonParam; ///< @brief Configuration field for down button pin
+	AsyncWiFiManagerParameter* fullTravelTimeParam; ///< @brief Configuration field for full travel time
+	AsyncWiFiManagerParameter* notifPeriodTimeParam; ///< @brief Configuration field for notification period time
+	AsyncWiFiManagerParameter* keepAlivePeriodTimeParam; ///< @brief Configuration field for keep alive time
+	AsyncWiFiManagerParameter* onStateParam; ///< @brief Configuration field for on state value for relay pins
 
- public:
-	 void begin (void *data = NULL);
-	 bool processRxCommand (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding);
-	 void loop ();
-	 ~BlindController ();
-	 /**
-	  * @brief Called when wifi manager starts config portal
-	  * @param enigmaIotGw Pointer to EnigmaIOT gateway instance
-	  */
-	 void configManagerStart (EnigmaIOTNodeClass* node);
+public:
+	void begin (void* data = NULL);
+	bool processRxCommand (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding);
+	void loop ();
+	~BlindController ();
+	/**
+	 * @brief Called when wifi manager starts config portal
+	 * @param enigmaIotGw Pointer to EnigmaIOT gateway instance
+	 */
+	void configManagerStart (EnigmaIOTNodeClass* node);
 
-	 /**
-	  * @brief Called when wifi manager exits config portal
-	  * @param status `true` if configuration was successful
-	  */
-	 void configManagerExit (bool status);
+	/**
+	 * @brief Called when wifi manager exits config portal
+	 * @param status `true` if configuration was successful
+	 */
+	void configManagerExit (bool status);
 
-	 /**
-	  * @brief Loads output module configuration
-	  * @return Returns `true` if load was successful. `false` otherwise
-	  */
-	 bool loadConfig ();
+	/**
+	 * @brief Loads output module configuration
+	 * @return Returns `true` if load was successful. `false` otherwise
+	 */
+	bool loadConfig ();
 
 protected:
 	/**

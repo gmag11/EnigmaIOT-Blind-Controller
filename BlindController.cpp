@@ -68,7 +68,7 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 	free (strBuffer);
 
 	if (command == nodeMessageType_t::DOWNSTREAM_DATA_GET) {
-		if (!strcmp(doc[commandKey], positionCommandValue)) {
+		if (!strcmp (doc[commandKey], positionCommandValue)) {
 			DEBUG_INFO ("Position = %d", getPosition ());
 			if (!sendGetPosition ()) {
 				DEBUG_WARN ("Error sending get position command response");
@@ -137,7 +137,7 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 			}
 		}
 
-		
+
 	}
 	return true;
 }
@@ -261,7 +261,7 @@ void BlindController::callbackDownButton (uint8_t pin, uint8_t event, uint8_t co
 			DEBUG_INFO ("Call simple roll down");
 			positionRequest = -1; // Request undefined position
 			travellingTime = -1;
-			blindState = rollingDown; 
+			blindState = rollingDown;
 			movingDown = false; // Not moving down yet
 			DEBUG_DBG ("--- STATE: Rolling down");
 		} else if (count == 2) { // Second button press --> full roll down
@@ -297,7 +297,7 @@ void BlindController::defaultConfig () {
 }
 
 void BlindController::begin (void* data) {
-	blindControlerHw_t *data_p = (blindControlerHw_t*)data;
+	blindControlerHw_t* data_p = (blindControlerHw_t*)data;
 
 	defaultConfig ();
 
@@ -324,9 +324,9 @@ void BlindController::begin (void* data) {
 	DEBUG_INFO ("Up Button pin: %d", config.upButton);
 	DEBUG_INFO ("Down Button pin: %d", config.downButton);
 	DEBUG_INFO ("Full travelling time: %d ms", config.fullTravellingTime);
-	DEBUG_INFO ("Notification period time: %d ms",config.notifPeriod);
+	DEBUG_INFO ("Notification period time: %d ms", config.notifPeriod);
 	DEBUG_INFO ("Keep Alive period time: %d ms", config.keepAlivePeriod);
-	DEBUG_INFO ("On Relay state: %s", config.ON_STATE?"HIGH":"LOW");
+	DEBUG_INFO ("On Relay state: %s", config.ON_STATE ? "HIGH" : "LOW");
 
 
 	sendStartAnouncement ();
@@ -579,11 +579,11 @@ void BlindController::configManagerStart (EnigmaIOTNodeClass* node) {
 	//static char downButtonStr[10];
 	//itoa (config.downButton, downButtonStr, 9);
 	//downButtonParam = new AsyncWiFiManagerParameter ("downButtonParam", "Down Button Pin", downButtonStr, 9, "required type=\"number\" min=\"0\" max=\"16\" step=\"1\"");
-	
+
 	static char fullTravelTimeParamStr[10];
-	itoa (config.fullTravellingTime/1000, fullTravelTimeParamStr, 9);
+	itoa (config.fullTravellingTime / 1000, fullTravelTimeParamStr, 9);
 	fullTravelTimeParam = new AsyncWiFiManagerParameter ("fullTravelTimeParam", "Full Travel Time", fullTravelTimeParamStr, 9, "required type=\"number\" min=\"0\" max=\"3600\" step=\"1\"");
-	
+
 	//static char notifPeriodTimeStr[10];
 	//itoa (config.notifPeriod/1000, notifPeriodTimeStr, 9);
 	//notifPeriodTimeParam = new AsyncWiFiManagerParameter ("notifPeriodTimeParam", "Notification Period", notifPeriodTimeStr, 9, "required type=\"number\" min=\"0\" max=\"3600\" step=\"1\"");
@@ -596,7 +596,7 @@ void BlindController::configManagerStart (EnigmaIOTNodeClass* node) {
 	//itoa (config.ON_STATE, onStateStr, 9);
 	//onStateParam = new AsyncWiFiManagerParameter ("onStateParam", "Relay Pin On State", onStateStr, 9, "required type=\"number\" min=\"0\" max=\"1\" step=\"1\"");
 
-	
+
 
 	//enigmaIotNode->addWiFiManagerParameter (upRelayPinParam);
 	//enigmaIotNode->addWiFiManagerParameter (downRelayPinParam);
@@ -689,7 +689,7 @@ bool BlindController::loadConfig () {
 			//config.notifPeriod = doc["notifPeriod"].as<int> ();
 			//config.keepAlivePeriod = doc["keepAlivePeriod"].as<int> ();
 			//config.ON_STATE = doc["onState"].as<int> ()==1?HIGH:LOW;
-			
+
 			configFile.close ();
 			if (json_correct) {
 				DEBUG_INFO ("Blind controller configuration successfuly read");
@@ -707,7 +707,7 @@ bool BlindController::loadConfig () {
 			//DEBUG_INFO ("On Relay state: %d", config.ON_STATE);
 
 			size_t jsonLen = measureJsonPretty (doc) + 1;
-			char *output=(char*)malloc(jsonLen);
+			char* output = (char*)malloc (jsonLen);
 			size_t resultlen = serializeJsonPretty (doc, output, jsonLen);
 
 			DEBUG_DBG ("File content:\n%s", output);
