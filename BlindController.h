@@ -17,9 +17,9 @@ struct blindControlerHw_t {
 	int downRelayPin;
 	int upButton;
 	int downButton;
-	time_t fullTravellingTime;
-	time_t notifPeriod;
-	time_t keepAlivePeriod;
+	clock_t fullTravellingTime;
+	clock_t notifPeriod;
+	clock_t keepAlivePeriod;
 	int ON_STATE;
 };
 
@@ -113,7 +113,7 @@ protected:
 	blindState_t getState () {
 		return blindState;
 	}
-	char* stateToStr (int state) {
+	const char* stateToStr (int state) {
 		switch (state) {
 		case rollingUp:
 			return "Rolling up";

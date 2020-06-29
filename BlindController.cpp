@@ -503,7 +503,7 @@ void BlindController::stop () {
 }
 
 void BlindController::sendPosition () {
-	static time_t lastShowedPos;
+	static clock_t lastShowedPos;
 	switch (blindState) {
 	case rollingUp:
 	case rollingDown:
@@ -519,6 +519,15 @@ void BlindController::sendPosition () {
 			DEBUG_INFO ("Position: %d", position);
 			processBlindEvent (blindState, position);
 		}
+		break;
+	case error:
+		if (millis() - lastShowedPos > config.keepAlivePeriod) {
+			lastShowedPos = millis();
+			DEBUG_WARN("Blind in error status");
+			DEBUG_INFO("Position: %d", position);
+			processBlindEvent(blindState, position);
+		}
+		break;
 	}
 }
 
@@ -547,8 +556,8 @@ void BlindController::loop () {
 }
 
 time_t BlindController::movementToTime (int8_t movement) {
-	time_t calculatedTime = movement * config.fullTravellingTime / 100;
-	if (movement >= config.fullTravellingTime) {
+	clock_t calculatedTime = movement * config.fullTravellingTime / 100;
+	if (movement >= (int8_t)config.fullTravellingTime) {
 		calculatedTime = config.fullTravellingTime * 1.1;
 	}
 	DEBUG_DBG ("Desired movement: %d. Calculated time: %d", movement, calculatedTime);
