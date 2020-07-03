@@ -39,6 +39,17 @@ const char* upButtonValue = "up";
 const char* downButtonValue = "down";
 const char* countNumberKey = "num";
 
+const uint8_t pos_len_lut[] = { 0,  0,  0,  0,  0,  0,  0,  1,  1,  1, // 0  -  9
+								 1,  2,  2,  2,  2,  3,  3,  4,  4,  4, // 10 - 19
+								 5,  5,  6,  6,  7,  8,  8,  9,  9, 10, // 20 - 29
+								11, 12, 13, 13, 14, 15, 16, 17, 17, 18, // 30 - 39
+								19, 20, 21, 22, 23, 24, 25, 26, 27, 28, // 40 - 49
+								29, 30, 32, 33, 34, 35, 36, 38, 39, 40, // 50 - 59
+								41, 43, 44, 45, 46, 48, 49, 51, 52, 53, // 60 - 69
+								55, 56, 58, 59, 60, 62, 63, 65, 66, 67, // 70 - 79
+								69, 71, 72, 73, 75, 77, 78, 80, 81, 83, // 80 - 89
+								84, 86, 87, 89, 90, 92, 94, 95, 97, 98, // 90 - 99
+								100 };									// 100
 
 bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding) {
 	// TODO
@@ -365,8 +376,32 @@ void BlindController::fullRolldown () {
 	DEBUG_DBG ("--- STATE: Rolling down");
 }
 
+int angleToPosition (int angle) {
+	if (angle >= 0 && angle <= 100) {
+		return pos_len_lut[angle];
+	}
+}
+
+int positionToAngle (int position) {
+	if (position == -1) {
+		return -1;
+	}
+	if (position <= 0) {
+		return 0;
+	}
+	if (position >= 100) {
+		return 100;
+	}
+	for (int i = 0; i < sizeof (pos_len_lut); i++) {
+		if (pos_len_lut[i] == position) {
+			return i+1;
+		}
+	}
+}
+
 bool BlindController::gotoPosition (int pos) {
 	int currentPosition = position;
+	pos = angleToPosition (pos);
 
 	if (pos <= 0) {
 		pos = 0;
@@ -398,7 +433,7 @@ bool BlindController::gotoPosition (int pos) {
 		}
 	} else {
 		DEBUG_INFO ("Requested = Current position");
-		processBlindEvent (blindState, position);
+		processBlindEvent (blindState, positionToAngle(position));
 	}
 	return true;
 }
@@ -430,13 +465,13 @@ void  BlindController::rollup () {
 		}
 		blindState = stopped;
 		DEBUG_DBG ("--- STATE: Stopped");
-		processBlindEvent (blindState, position);
+		processBlindEvent (blindState, positionToAngle(position));
 	} else {
 		if (timeMoving > config.fullTravellingTime * 1.1) {
 			blindState = stopped;
 			position = 100;
 			DEBUG_DBG ("--- STATE: Stopped");
-			processBlindEvent (blindState, position);
+			processBlindEvent (blindState, positionToAngle(position));
 		}
 	}
 }
@@ -468,13 +503,13 @@ void BlindController::rolldown () {
 		}
 		blindState = stopped;
 		DEBUG_DBG ("--- STATE: Stopped");
-		processBlindEvent (blindState, position);
+		processBlindEvent (blindState, positionToAngle (position));
 	} else {
 		if (timeMoving > config.fullTravellingTime * 1.1) {
 			blindState = stopped;
 			position = 0;
 			DEBUG_DBG ("--- STATE: Stopped");
-			processBlindEvent (blindState, position);
+			processBlindEvent (blindState, positionToAngle (position));
 		}
 	}
 
@@ -484,7 +519,7 @@ void BlindController::requestStop () {
 	DEBUG_DBG ("Configure stop");
 	blindState = stopped;
 	DEBUG_DBG ("--- STATE: Stopped");
-	processBlindEvent (blindState, position);
+	processBlindEvent (blindState, positionToAngle (position));
 }
 
 void BlindController::setTravelTime (int travelTime) {
@@ -510,22 +545,22 @@ void BlindController::sendPosition () {
 		if (millis () - lastShowedPos > config.notifPeriod) {
 			lastShowedPos = millis ();
 			DEBUG_INFO ("Position: %d", position);
-			processBlindEvent (blindState, position);
+			processBlindEvent (blindState, positionToAngle (position));
 		}
 		break;
 	case stopped:
 		if (millis () - lastShowedPos > config.keepAlivePeriod) {
 			lastShowedPos = millis ();
 			DEBUG_INFO ("Position: %d", position);
-			processBlindEvent (blindState, position);
+			processBlindEvent (blindState, positionToAngle (position));
 		}
 		break;
 	case error:
-		if (millis() - lastShowedPos > config.keepAlivePeriod) {
-			lastShowedPos = millis();
-			DEBUG_WARN("Blind in error status");
-			DEBUG_INFO("Position: %d", position);
-			processBlindEvent(blindState, position);
+		if (millis () - lastShowedPos > config.keepAlivePeriod) {
+			lastShowedPos = millis ();
+			DEBUG_WARN ("Blind in error status");
+			DEBUG_INFO ("Position: %d", position);
+			processBlindEvent (blindState, positionToAngle (position));
 		}
 		break;
 	}
