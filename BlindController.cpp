@@ -21,6 +21,9 @@ constexpr auto ON_STATE_DEFAULT = HIGH;
 
 constexpr auto CONFIG_FILE = "/blindconf.json"; ///< @brief blind controller configuration file name
 
+constexpr auto BUTTON_DELAY = 50;
+constexpr auto BUTTON_REPEAT = 200;
+
 const char* commandKey = "cmd";
 const char* positionCommandValue = "pos";
 const char* stateCommandValue = "state";
@@ -353,8 +356,8 @@ void BlindController::configurePins () {
 	if (downButton) {
 		delete(downButton);
 	}
-	upButton = new DebounceEvent (config.upButton, std::bind (&BlindController::callbackUpButton, this, _1, _2, _3, _4), BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH | BUTTON_SET_PULLUP, 50, 500);
-	downButton = new DebounceEvent (config.downButton, std::bind (&BlindController::callbackDownButton, this, _1, _2, _3, _4), BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH | BUTTON_SET_PULLUP, 50, 500);
+	upButton = new DebounceEvent (config.upButton, std::bind (&BlindController::callbackUpButton, this, _1, _2, _3, _4), BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH | BUTTON_SET_PULLUP, BUTTON_DELAY, BUTTON_REPEAT);
+	downButton = new DebounceEvent (config.downButton, std::bind (&BlindController::callbackDownButton, this, _1, _2, _3, _4), BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH | BUTTON_SET_PULLUP, BUTTON_DELAY, BUTTON_REPEAT);
 
 	pinMode (config.upRelayPin, OUTPUT);
 	pinMode (config.downRelayPin, OUTPUT);
