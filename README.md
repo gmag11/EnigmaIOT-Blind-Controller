@@ -66,12 +66,12 @@ Blind position is calibrated on every full open or full close command. Until fir
 Ask blind controller to send blind position inmediatelly.
 
 ```
-<Network name>/<node name>|<node address>/data/get {"cmd":"pos"}
+<Network name>/<node name>|<node address>/get/data {"cmd":"pos"}
 ```
 
 **Example**
 
-`EnigmaIOT/room_blind/data`/get		`{"cmd":"pos"}` 
+`EnigmaIOT/room_blind/get/data`		`{"cmd":"pos"}` 
 
 #### Response
 
@@ -82,28 +82,28 @@ Ask blind controller to send blind position inmediatelly.
 Gets configured time required to move blind between extreme positions.
 
 ```
-<Network name>/<node name>|<node address>/data/get {"cmd":"time"}
+<Network name>/<node name>|<node address>/get/data {"cmd":"time"}
 ```
 
 **Example**
 
-`EnigmaIOT/room_blind/data`/get		`{"cmd":"time"}` 
+`EnigmaIOT/room_blind/get/data`		`{"cmd":"time"}` 
 
 #### Response
 
-`EnigmaIOT/room_blind/data {"cmd":"time","time":30}` --->  Full blind movement time is configured as 30 seconds
+`EnigmaIOT/room_blind/data {"cmd":"time","time":30000}` --->  Full blind movement time is configured as 30 seconds
 
 ### Set full roll time
 
 Gets configured time required to move blind between extreme positions.
 
 ```
-<Network name>/<node name>|<node address>/data/set {"cmd":"time","time":<Full movement time in seconds>}
+<Network name>/<node name>|<node address>/set/data {"cmd":"time","time":<Full movement time in seconds>}
 ```
 
 **Example**
 
-`EnigmaIOT/room_blind/data`/set		`{"cmd":"time","time":20}`  ---> Set full blind movement time to 20 seconds.
+`EnigmaIOT/room_blind/set/data`		`{"cmd":"time","time":20}`  ---> Set full blind movement time to 20 seconds.
 
 #### Response
 
@@ -114,12 +114,12 @@ Gets configured time required to move blind between extreme positions.
 Triggers a full roll up movement.
 
 ```
-<Network name>/<node name>|<node address>/data/set {"cmd":"uu"}
+<Network name>/<node name>|<node address>/set/data {"cmd":"uu"}
 ```
 
 **Example**
 
-`EnigmaIOT/room_blind/data`/set		`{"cmd":"uu"}` 
+`EnigmaIOT/room_blind/set/data`		`{"cmd":"uu"}` 
 
 #### Respose
 
@@ -132,12 +132,12 @@ Result:`1` = Ok, `0` = Not ok
 Triggers a full roll down movement.
 
 ```
-<Network name>/<node name>|<node address>/data/set {"cmd":"dd"}
+<Network name>/<node name>|<node address>/set/data {"cmd":"dd"}
 ```
 
 **Example**
 
-`EnigmaIOT/room_blind/data`/set		`{"cmd":"dd"}` 
+`EnigmaIOT/room_blind/set/data`		`{"cmd":"dd"}` 
 
 #### Respose
 
@@ -150,12 +150,12 @@ Result:`1` = Ok, `0` = Not ok
 Stops blind unconditionally.
 
 ```
-<Network name>/<node name>|<node address>/data/set {"cmd":"stop"}
+<Network name>/<node name>|<node address>/set/data {"cmd":"stop"}
 ```
 
 **Example**
 
-`EnigmaIOT/room_blind/data`/set		`{"cmd":"stop"}` 
+`EnigmaIOT/room_blind/set/data`		`{"cmd":"stop"}` 
 
 #### Respose
 
@@ -170,12 +170,12 @@ Move blind to an arbitrary position between 0 (closed) and 100 (open). Values gr
 **Move to position 100** is equivalent to **full roll up** and **move to position 0** is equivalent to **full roll down**.
 
 ```
-<Network name>/<node name>|<node address>/data/set {"cmd":"go","pos":<New position>}
+<Network name>/<node name>|<node address>/set/data {"cmd":"go","pos":<New position>}
 ```
 
 **Example**
 
-`EnigmaIOT/room_blind/data`/set		`{"cmd":"go","pos":50}` ---> Move blind to mid position.
+`EnigmaIOT/room_blind/set/data`		`{"cmd":"go","pos":50}` ---> Move blind to mid position.
 
 #### Respose
 
