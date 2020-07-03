@@ -82,6 +82,7 @@ void setup () {
 	EnigmaIOTNode.onConnected (connectEventHandler);
 	EnigmaIOTNode.onDisconnected (disconnectEventHandler);
 	EnigmaIOTNode.onDataRx (processRxData);
+	EnigmaIOTNode.enableClockSync (false);
 	EnigmaIOTNode.onWiFiManagerStarted (wifiManagerStarted);
 	EnigmaIOTNode.onWiFiManagerExit (wifiManagerExit);
 
