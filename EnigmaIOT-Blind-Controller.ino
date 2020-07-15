@@ -4,8 +4,8 @@
  Author:	gmartin
 */
 
-#ifndef ESP8266
-#error Node only supports ESP8266 platform
+#if !defined ESP8266 && !defined ESP32
+#error Node only supports ESP8266 or ESP32 platform
 #endif
 
 #include <Arduino.h>
@@ -18,16 +18,33 @@
 #include <CayenneLPP.h>
 #include <ArduinoJson.h>
 
+#ifdef ESP8266
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <ESP8266httpUpdate.h>
+#include <ESPAsyncTCP.h> // Comment to compile for ESP32
+#include <Hash.h>
+#elif defined ESP32
+#include <WiFi.h>
+#include <SPIFFS.h>
+#include <AsyncTCP.h> // Comment to compile for ESP8266
+#include <SPIFFS.h>
+#include <Update.h>
+#include <driver/adc.h>
+#include "esp_wifi.h"
+#endif
 #include <ArduinoJson.h>
 #include <Curve25519.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPAsyncWiFiManager.h>
-#include <ESPAsyncTCP.h>
-#include <Hash.h>
-#include <DNSServer.h>
+//#include <DNSServer.h>
+#include <FS.h>
 
-//#define USE_SERIAL // Don't forget to set DEBUG_LEVEL to NONE if serial is disabled
+#ifndef LED_BUILTIN
+#define LED_BUILTIN 2 // ESP32 boards normally have a LED in GPIO3 or GPIO5
+#endif // !LED_BUILTIN
+
+#define USE_SERIAL // Don't forget to set DEBUG_LEVEL to NONE if serial is disabled
 #ifndef USE_SERIAL
 #define BLUE_LED 3
 #else
@@ -96,6 +113,21 @@ void setup () {
 
 	controller->sendDataCallback (sendUplinkData);
 	controller->begin ();
+
+	uint8_t macAddress[ENIGMAIOT_ADDR_LEN];
+#ifdef ESP8266
+	if (wifi_get_macaddr (STATION_IF, macAddress))
+#elif defined ESP32
+	if ((esp_wifi_get_mac (WIFI_IF_STA, macAddress) == ESP_OK))
+#endif
+	{
+		EnigmaIOTNode.setNodeAddress (macAddress);
+		char macStr[ENIGMAIOT_ADDR_LEN * 3];
+		DEBUG_DBG ("Node address set to %s", mac2str (macAddress, macStr));
+	} else {
+		DEBUG_WARN ("Node address error");
+	}
+
 	DEBUG_DBG ("END setup");
 }
 

@@ -9,14 +9,18 @@
 	#include "WProgram.h"
 #endif
 
+#ifdef ESP32
+#include <SPIFFS.h>
+#endif
+
 #include <EnigmaIOTjsonController.h>
 #include <DebounceEvent.h>
 
 struct blindControlerHw_t {
 	int upRelayPin;
 	int downRelayPin;
-	int upButton;
-	int downButton;
+	uint8_t upButton;
+	uint8_t downButton;
 	clock_t fullTravellingTime;
 	clock_t notifPeriod;
 	clock_t keepAlivePeriod;

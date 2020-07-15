@@ -4,7 +4,7 @@
 
 #include "BlindController.h"
 #include "debug.h"
-//#include <functional>
+#include <functional>
 
 using namespace std;
 using namespace placeholders;
@@ -383,6 +383,7 @@ int angleToPosition (int angle) {
 	if (angle >= 0 && angle <= 100) {
 		return pos_len_lut[angle];
 	}
+	return -1;
 }
 
 int positionToAngle (int position) {
@@ -400,6 +401,7 @@ int positionToAngle (int position) {
 			return i+1;
 		}
 	}
+	return -1;
 }
 
 bool BlindController::gotoPosition (int pos) {
