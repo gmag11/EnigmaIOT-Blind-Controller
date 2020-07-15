@@ -171,7 +171,7 @@ bool BlindController::sendGetTravelTime () {
 	DynamicJsonDocument json (capacity);
 
 	json[commandKey] = travelTimeValue;
-	json[travelTimeValue] = config.fullTravellingTime;
+	json[travelTimeValue] = config.fullTravellingTime / 1000;
 
 	return sendJson (json);
 }
@@ -529,7 +529,7 @@ void BlindController::requestStop () {
 
 void BlindController::setTravelTime (int travelTime) {
 	DEBUG_INFO ("Setting travel time to %d", travelTime);
-	config.fullTravellingTime = travelTime;
+	config.fullTravellingTime = travelTime * 1000;
 	config.keepAlivePeriod = config.fullTravellingTime * KEEP_ALIVE_PERIOD_RATIO;
 	config.notifPeriod = config.fullTravellingTime / NOTIF_PERIOD_RATIO;
 	saveConfig ();
