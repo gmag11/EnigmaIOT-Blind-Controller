@@ -118,7 +118,7 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 			fullRolldown ();
 		} else if (!strcmp (doc[commandKey], gotoCommandValue)) { // Command go to position
 			if (!doc.containsKey (positionKey)) {
-				if (!sendCommandResp (gotoCommandValue, false)) { // ??????
+				if (!sendCommandResp (gotoCommandValue, false)) {
 					DEBUG_WARN ("Error sending go command response");
 				}
 				return false;
@@ -129,14 +129,14 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 				DEBUG_WARN ("Error sending go command response");
 				return false;
 			}
-		} else if (!strcmp (doc[commandKey], stopCommandValue)) {
+		} else if (!strcmp (doc[commandKey], stopCommandValue)) { // Command stop
 			DEBUG_INFO ("Stop request");
 			if (!sendCommandResp (stopCommandValue, true)) {
 				DEBUG_WARN ("Error sending stop command response");
 				return false;
 			}
 			requestStop ();
-		} else if (!strcmp (doc[commandKey], travelTimeValue)) {
+		} else if (!strcmp (doc[commandKey], travelTimeValue)) { // Command set travel time
 			DEBUG_INFO ("Set travel time request");
 			if (doc.containsKey (travelTimeValue)) {
 				DEBUG_DBG ("Found time parameter");
@@ -171,7 +171,7 @@ bool BlindController::sendGetTravelTime () {
 	DynamicJsonDocument json (capacity);
 
 	json[commandKey] = travelTimeValue;
-	json[travelTimeValue] = config.fullTravellingTime / 1000;
+	json[travelTimeValue] = config.fullTravellingTime;
 
 	return sendJson (json);
 }
@@ -531,7 +531,7 @@ void BlindController::requestStop () {
 
 void BlindController::setTravelTime (int travelTime) {
 	DEBUG_INFO ("Setting travel time to %d", travelTime);
-	config.fullTravellingTime = travelTime * 1000;
+	config.fullTravellingTime = travelTime;
 	config.keepAlivePeriod = config.fullTravellingTime * KEEP_ALIVE_PERIOD_RATIO;
 	config.notifPeriod = config.fullTravellingTime / NOTIF_PERIOD_RATIO;
 	saveConfig ();

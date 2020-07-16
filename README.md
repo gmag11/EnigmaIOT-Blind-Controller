@@ -98,16 +98,16 @@ Gets configured time required to move blind between extreme positions.
 Gets configured time required to move blind between extreme positions.
 
 ```
-<Network name>/<node name>|<node address>/set/data {"cmd":"time","time":<Full movement time in seconds>}
+<Network name>/<node name>|<node address>/set/data {"cmd":"time","time":<Full movement time in milliseconds>}
 ```
 
 **Example**
 
-`EnigmaIOT/room_blind/set/data`		`{"cmd":"time","time":20}`  ---> Set full blind movement time to 20 seconds.
+`EnigmaIOT/room_blind/set/data`		`{"cmd":"time","time":20000}`  ---> Set full blind movement time to 20 seconds.
 
 #### Response
 
-`EnigmaIOT/room_blind/data {"cmd":"time","time":20}` --->  Full blind movement is configured as 20 seconds
+`EnigmaIOT/room_blind/data {"cmd":"time","time":20000}` --->  Full blind movement is configured as 20 seconds
 
 ### Fully roll up blind
 
