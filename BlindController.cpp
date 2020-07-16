@@ -406,7 +406,9 @@ int positionToAngle (int position) {
 
 bool BlindController::gotoPosition (int pos) {
 	int currentPosition = position;
+	DEBUG_INFO ("Go to position %d. Current = %d", pos, currentPosition);
 	pos = angleToPosition (pos);
+	DEBUG_INFO ("Linear position = %d", pos);
 
 	if (pos <= 0) {
 		pos = 0;
@@ -415,14 +417,14 @@ bool BlindController::gotoPosition (int pos) {
 		pos = 100;
 		currentPosition = 0; // Force full rolling up
 	} else if (position == -1) {
-		DEBUG_WARN ("Position not calibrated. Pos = %d", pos);
+		DEBUG_INFO ("Position not calibrated. Pos = %d", pos);
 		return false;
 	}
 	stop ();
 	positionRequest = pos;
 	if (pos > currentPosition) {
 		blindState = rollingUp;
-		DEBUG_INFO ("--- STATE: Rolling up to position %d", pos);
+		DEBUG_INFO ("--- STATE: Rolling up from %d to  %d", position, pos);
 		if (pos < 100) {
 			travellingTime = movementToTime (pos - position);
 		} else {
@@ -430,7 +432,7 @@ bool BlindController::gotoPosition (int pos) {
 		}
 	} else if (pos < currentPosition) {
 		blindState = rollingDown;
-		DEBUG_INFO ("--- STATE: Rolling down to position %d", pos);
+		DEBUG_INFO ("--- STATE: Rolling down from %d to %d", position, pos);
 		if (pos > 0) {
 			travellingTime = movementToTime (position - pos);
 		} else {
@@ -597,10 +599,13 @@ void BlindController::loop () {
 
 time_t BlindController::movementToTime (int8_t movement) {
 	clock_t calculatedTime = movement * config.fullTravellingTime / 100;
-	if (movement >= (int8_t)config.fullTravellingTime) {
+	DEBUG_INFO ("config.fullTravellingTime = %d", config.fullTravellingTime);
+	DEBUG_INFO ("Calculated time: %d", calculatedTime);
+
+	if (calculatedTime >= config.fullTravellingTime) {
 		calculatedTime = config.fullTravellingTime * 1.1;
 	}
-	DEBUG_DBG ("Desired movement: %d. Calculated time: %d", movement, calculatedTime);
+	DEBUG_INFO ("Desired movement: %d. Calculated time: %d", movement, calculatedTime);
 	return calculatedTime;
 }
 
