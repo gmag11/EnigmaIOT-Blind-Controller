@@ -310,7 +310,7 @@ void BlindController::defaultConfig () {
 	config.ON_STATE = ON_STATE_DEFAULT;
 }
 
-void BlindController::begin (void* data) {
+void BlindController::setup (void* data) {
 	blindControlerHw_t* data_p = (blindControlerHw_t*)data;
 
 	defaultConfig ();

@@ -73,7 +73,7 @@ protected:
 	AsyncWiFiManagerParameter* onStateParam; ///< @brief Configuration field for on state value for relay pins
 
 public:
-	void begin (void* data = NULL);
+	void setup (void* data = NULL);
 	bool processRxCommand (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding);
 	void loop ();
 	~BlindController ();

@@ -27,7 +27,7 @@
 #elif defined ESP32
 #include <WiFi.h>
 #include <SPIFFS.h>
-#include <AsyncTCP.h> // Comment to compile for ESP8266
+//#include <AsyncTCP.h> // Comment to compile for ESP8266
 #include <SPIFFS.h>
 #include <Update.h>
 #include <driver/adc.h>
@@ -37,7 +37,7 @@
 #include <Curve25519.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPAsyncWiFiManager.h>
-//#include <DNSServer.h>
+#include <DNSServer.h>
 #include <FS.h>
 
 #ifndef LED_BUILTIN
@@ -111,9 +111,6 @@ void setup () {
 
 	EnigmaIOTNode.begin (&Espnow_hal, NULL, NULL, true, false);
 
-	controller->sendDataCallback (sendUplinkData);
-	controller->begin ();
-
 	uint8_t macAddress[ENIGMAIOT_ADDR_LEN];
 #ifdef ESP8266
 	if (wifi_get_macaddr (STATION_IF, macAddress))
@@ -127,6 +124,9 @@ void setup () {
 	} else {
 		DEBUG_WARN ("Node address error");
 	}
+
+	controller->sendDataCallback (sendUplinkData);
+	controller->setup ();
 
 	DEBUG_DBG ("END setup");
 }
