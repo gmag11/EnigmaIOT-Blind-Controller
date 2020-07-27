@@ -4,3 +4,10 @@
 .vscode/launch.json
 .vscode/ipch
 .vscode/
+*.sln
+*.vcxproj
+*.filters
+*.user
+.vs/
+__vm/
+Debug/
