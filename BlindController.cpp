@@ -54,7 +54,7 @@ const uint8_t pos_len_lut[] = { 0,  0,  0,  0,  0,  0,  0,  1,  1,  1, // 0  -  
 								84, 86, 87, 89, 90, 92, 94, 95, 97, 98, // 90 - 99
 								100 };									// 100
 
-bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding) {
+bool CONTROLLER_CLASS_NAME::processRxCommand (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding) {
 	// TODO
 	if (command != nodeMessageType_t::DOWNSTREAM_DATA_GET && command != nodeMessageType_t::DOWNSTREAM_DATA_SET) {
 		DEBUG_WARN ("Wrong message type");
@@ -156,7 +156,7 @@ bool BlindController::processRxCommand (const uint8_t* mac, const uint8_t* buffe
 	return true;
 }
 
-bool BlindController::sendGetPosition () {
+bool CONTROLLER_CLASS_NAME::sendGetPosition () {
 	const size_t capacity = JSON_OBJECT_SIZE (2);
 	DynamicJsonDocument json (capacity);
 
@@ -166,7 +166,7 @@ bool BlindController::sendGetPosition () {
 	return sendJson (json);
 }
 
-bool BlindController::sendGetTravelTime () {
+bool CONTROLLER_CLASS_NAME::sendGetTravelTime () {
 	const size_t capacity = JSON_OBJECT_SIZE (2);
 	DynamicJsonDocument json (capacity);
 
@@ -177,7 +177,7 @@ bool BlindController::sendGetTravelTime () {
 }
 
 
-bool BlindController::sendGetStatus () {
+bool CONTROLLER_CLASS_NAME::sendGetStatus () {
 	const size_t capacity = JSON_OBJECT_SIZE (3);
 	DynamicJsonDocument json (capacity);
 
@@ -188,7 +188,7 @@ bool BlindController::sendGetStatus () {
 	return sendJson (json);
 }
 
-bool BlindController::sendCommandResp (const char* command, bool result) {
+bool CONTROLLER_CLASS_NAME::sendCommandResp (const char* command, bool result) {
 	const size_t capacity = JSON_OBJECT_SIZE (2);
 	DynamicJsonDocument json (capacity);
 
@@ -198,7 +198,7 @@ bool BlindController::sendCommandResp (const char* command, bool result) {
 	return sendJson (json);
 }
 
-void BlindController::processBlindEvent (blindState_t state, int8_t position) {
+void CONTROLLER_CLASS_NAME::processBlindEvent (blindState_t state, int8_t position) {
 	DEBUG_INFO ("State: %s. Position %d", stateToStr (state), position);
 
 	const size_t capacity = JSON_OBJECT_SIZE (5);
@@ -211,7 +211,7 @@ void BlindController::processBlindEvent (blindState_t state, int8_t position) {
 	sendJson (json);
 }
 
-bool BlindController::sendButtonPress (button_t button, int count) {
+bool CONTROLLER_CLASS_NAME::sendButtonPress (button_t button, int count) {
 	const size_t capacity = JSON_OBJECT_SIZE (3);
 	DynamicJsonDocument json (capacity);
 
@@ -225,17 +225,18 @@ bool BlindController::sendButtonPress (button_t button, int count) {
 	return sendJson (json);
 }
 
-bool BlindController::sendStartAnouncement () {
-	const size_t capacity = JSON_OBJECT_SIZE (1);
+bool CONTROLLER_CLASS_NAME::sendStartAnouncement () {
+	const size_t capacity = JSON_OBJECT_SIZE (2);
 	DynamicJsonDocument json (capacity);
 
 	json[commandKey] = startCommandValue;
+	json["device"] = CONTROLLER_NAME;
 
 	return sendJson (json);
 }
 
 
-void BlindController::callbackUpButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length) {
+void CONTROLLER_CLASS_NAME::callbackUpButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length) {
 	DEBUG_INFO ("Up button. Event %d Count %d", event, count);
 	if (event == EVENT_PRESSED) {
 		sendButtonPress (button_t::UP_BUTTON, count);
@@ -266,7 +267,7 @@ void BlindController::callbackUpButton (uint8_t pin, uint8_t event, uint8_t coun
 	}
 }
 
-void BlindController::callbackDownButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length) {
+void CONTROLLER_CLASS_NAME::callbackDownButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length) {
 	DEBUG_INFO ("Down button. Event %d Count %d", event, count);
 	if (event == EVENT_PRESSED) {
 		sendButtonPress (button_t::DOWN_BUTTON, count);
@@ -298,7 +299,7 @@ void BlindController::callbackDownButton (uint8_t pin, uint8_t event, uint8_t co
 
 }
 
-void BlindController::defaultConfig () {
+void CONTROLLER_CLASS_NAME::defaultConfig () {
 	config.upRelayPin = UP_RELAY_PIN;
 	config.downRelayPin = DOWN_RELAY_PIN;
 	config.upButton = UP_BUTTON_PIN;
@@ -310,7 +311,8 @@ void BlindController::defaultConfig () {
 	config.ON_STATE = ON_STATE_DEFAULT;
 }
 
-void BlindController::setup (void* data) {
+void CONTROLLER_CLASS_NAME::setup (EnigmaIOTNodeClass* node, void* data) {
+	enigmaIotNode = node;
 	blindControlerHw_t* data_p = (blindControlerHw_t*)data;
 
 	defaultConfig ();
@@ -349,7 +351,7 @@ void BlindController::setup (void* data) {
 
 }
 
-void BlindController::configurePins () {
+void CONTROLLER_CLASS_NAME::configurePins () {
 	if (upButton) {
 		delete(upButton);
 	}
@@ -363,7 +365,7 @@ void BlindController::configurePins () {
 	pinMode (config.downRelayPin, OUTPUT);
 }
 
-void BlindController::fullRollup () {
+void CONTROLLER_CLASS_NAME::fullRollup () {
 	DEBUG_DBG ("Configure full roll up");
 	positionRequest = 100;
 	travellingTime = config.fullTravellingTime * 1.1;
@@ -371,7 +373,7 @@ void BlindController::fullRollup () {
 	DEBUG_DBG ("--- STATE: Rolling up");
 }
 
-void BlindController::fullRolldown () {
+void CONTROLLER_CLASS_NAME::fullRolldown () {
 	DEBUG_DBG ("Configure full roll down");
 	positionRequest = 0;
 	travellingTime = config.fullTravellingTime * 1.1;
@@ -404,7 +406,7 @@ int positionToAngle (int position) {
 	return -1;
 }
 
-bool BlindController::gotoPosition (int pos) {
+bool CONTROLLER_CLASS_NAME::gotoPosition (int pos) {
 	int currentPosition = position;
 	DEBUG_INFO ("Go to position %d. Current = %d", pos, currentPosition);
 	pos = angleToPosition (pos);
@@ -445,7 +447,7 @@ bool BlindController::gotoPosition (int pos) {
 	return true;
 }
 
-void  BlindController::rollup () {
+void  CONTROLLER_CLASS_NAME::rollup () {
 	time_t timeMoving;
 
 	if (!movingUp) {
@@ -483,7 +485,7 @@ void  BlindController::rollup () {
 	}
 }
 
-void BlindController::rolldown () {
+void CONTROLLER_CLASS_NAME::rolldown () {
 	time_t timeMoving;
 
 	if (!movingDown) {
@@ -522,14 +524,14 @@ void BlindController::rolldown () {
 
 }
 
-void BlindController::requestStop () {
+void CONTROLLER_CLASS_NAME::requestStop () {
 	DEBUG_DBG ("Configure stop");
 	blindState = stopped;
 	DEBUG_DBG ("--- STATE: Stopped");
 	processBlindEvent (blindState, positionToAngle (position));
 }
 
-void BlindController::setTravelTime (int travelTime) {
+void CONTROLLER_CLASS_NAME::setTravelTime (int travelTime) {
 	DEBUG_INFO ("Setting travel time to %d", travelTime);
 	config.fullTravellingTime = travelTime;
 	config.keepAlivePeriod = config.fullTravellingTime * KEEP_ALIVE_PERIOD_RATIO;
@@ -537,14 +539,14 @@ void BlindController::setTravelTime (int travelTime) {
 	saveConfig ();
 }
 
-void BlindController::stop () {
+void CONTROLLER_CLASS_NAME::stop () {
 	digitalWrite (config.upRelayPin, OFF_STATE);
 	digitalWrite (config.downRelayPin, OFF_STATE);
 	movingDown = false;
 	movingUp = false;
 }
 
-void BlindController::sendPosition () {
+void CONTROLLER_CLASS_NAME::sendPosition () {
 	static clock_t lastShowedPos;
 	switch (blindState) {
 	case rollingUp:
@@ -574,7 +576,7 @@ void BlindController::sendPosition () {
 }
 
 
-void BlindController::loop () {
+void CONTROLLER_CLASS_NAME::loop () {
 	if (upButton)
 		upButton->loop ();
 	if (downButton)
@@ -597,7 +599,7 @@ void BlindController::loop () {
 	sendPosition ();
 }
 
-time_t BlindController::movementToTime (int8_t movement) {
+time_t CONTROLLER_CLASS_NAME::movementToTime (int8_t movement) {
 	clock_t calculatedTime = movement * config.fullTravellingTime / 100;
 	DEBUG_INFO ("config.fullTravellingTime = %d", config.fullTravellingTime);
 	DEBUG_INFO ("Calculated time: %d", calculatedTime);
@@ -609,14 +611,13 @@ time_t BlindController::movementToTime (int8_t movement) {
 	return calculatedTime;
 }
 
-BlindController::~BlindController () {
+CONTROLLER_CLASS_NAME::~CONTROLLER_CLASS_NAME () {
 	delete(upButton);
 	delete(downButton);
 	sendData = 0;
 }
 
-void BlindController::configManagerStart (EnigmaIOTNodeClass* node) {
-	enigmaIotNode = node;
+void CONTROLLER_CLASS_NAME::configManagerStart () {
 
 	//static char upRelayStr[10];
 	//itoa (config.upRelayPin, upRelayStr, 9);
@@ -662,7 +663,7 @@ void BlindController::configManagerStart (EnigmaIOTNodeClass* node) {
 	//enigmaIotNode->addWiFiManagerParameter (onStateParam);
 }
 
-void BlindController::configManagerExit (bool status) {
+void CONTROLLER_CLASS_NAME::configManagerExit (bool status) {
 	DEBUG_INFO ("==== Blind Controller Configuration result ====");
 	//DEBUG_INFO ("Up Relay pin: %s", upRelayPinParam->getValue());
 	//DEBUG_INFO ("Down Relay pin: %s", downRelayPinParam->getValue ());
@@ -705,7 +706,7 @@ void BlindController::configManagerExit (bool status) {
 	DEBUG_DBG ("Finish exit config manager");
 }
 
-bool BlindController::loadConfig () {
+bool CONTROLLER_CLASS_NAME::loadConfig () {
 	//SPIFFS.remove (CONFIG_FILE); // Only for testing
 	bool json_correct = false;
 
@@ -780,7 +781,7 @@ bool BlindController::loadConfig () {
 	return json_correct;
 }
 
-bool BlindController::saveConfig () {
+bool CONTROLLER_CLASS_NAME::saveConfig () {
 	if (!SPIFFS.begin ()) {
 		DEBUG_WARN ("Error opening filesystem");
 	}

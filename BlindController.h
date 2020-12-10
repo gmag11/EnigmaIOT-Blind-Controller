@@ -46,7 +46,10 @@ typedef enum {
 #error This code only supports ESP8266 or ESP32 platforms
 #endif
 
-class BlindController : EnigmaIOTjsonController {
+#define CONTROLLER_CLASS_NAME BlindController
+static const char* CONTROLLER_NAME = "Blind controller";
+
+class CONTROLLER_CLASS_NAME : EnigmaIOTjsonController {
 protected:
 	blindControlerHw_t config;
 	int OFF_STATE;
@@ -73,15 +76,15 @@ protected:
 	AsyncWiFiManagerParameter* onStateParam; ///< @brief Configuration field for on state value for relay pins
 
 public:
-	void setup (void* data = NULL);
+	void setup (EnigmaIOTNodeClass* node, void* data = NULL);
 	bool processRxCommand (const uint8_t* mac, const uint8_t* buffer, uint8_t length, nodeMessageType_t command, nodePayloadEncoding_t payloadEncoding);
 	void loop ();
-	~BlindController ();
+	~CONTROLLER_CLASS_NAME ();
 	/**
 	 * @brief Called when wifi manager starts config portal
 	 * @param enigmaIotGw Pointer to EnigmaIOT gateway instance
 	 */
-	void configManagerStart (EnigmaIOTNodeClass* node);
+	void configManagerStart ();
 
 	/**
 	 * @brief Called when wifi manager exits config portal
@@ -94,6 +97,10 @@ public:
 	 * @return Returns `true` if load was successful. `false` otherwise
 	 */
 	bool loadConfig ();
+	
+	void connectInform () {
+		sendStartAnouncement ();
+	}
 
 protected:
 	/**

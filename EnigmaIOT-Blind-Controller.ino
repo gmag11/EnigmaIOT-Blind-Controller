@@ -44,7 +44,7 @@
 #define LED_BUILTIN 2 // ESP32 boards normally have a LED in GPIO3 or GPIO5
 #endif // !LED_BUILTIN
 
-#define USE_SERIAL // Don't forget to set DEBUG_LEVEL to NONE if serial is disabled
+//#define USE_SERIAL // Don't forget to set DEBUG_LEVEL to NONE if serial is disabled
 #ifndef USE_SERIAL
 #define BLUE_LED 3
 #else
@@ -81,7 +81,7 @@ void wifiManagerExit (boolean status) {
 }
 
 void wifiManagerStarted () {
-	controller->configManagerStart (&EnigmaIOTNode);
+	controller->configManagerStart ();
 }
 
 void setup () {
@@ -92,7 +92,7 @@ void setup () {
 	Serial.println ();
 #endif
 
-	controller = (EnigmaIOTjsonController*)new BlindController ();
+	controller = (EnigmaIOTjsonController*)new CONTROLLER_CLASS_NAME ();
 
 	EnigmaIOTNode.setLed (BLUE_LED);
 	EnigmaIOTNode.setResetPin (RESET_PIN);
@@ -102,6 +102,7 @@ void setup () {
 	EnigmaIOTNode.enableClockSync (false);
 	EnigmaIOTNode.onWiFiManagerStarted (wifiManagerStarted);
 	EnigmaIOTNode.onWiFiManagerExit (wifiManagerExit);
+	EnigmaIOTNode.enableBroadcast ();
 
 	if (!controller->loadConfig ()) {
 		DEBUG_WARN ("Error reading config file");
@@ -126,7 +127,7 @@ void setup () {
 	}
 
 	controller->sendDataCallback (sendUplinkData);
-	controller->setup ();
+	controller->setup (&EnigmaIOTNode);
 
 	DEBUG_DBG ("END setup");
 }
