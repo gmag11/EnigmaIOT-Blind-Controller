@@ -31,7 +31,7 @@ const char* fullUpCommandValue = "uu";
 const char* fullDownCommandValue = "dd";
 const char* gotoCommandValue = "go";
 const char* stopCommandValue = "stop";
-const char* startCommandValue = "start";
+//const char* startCommandValue = "start";
 const char* travelTimeValue = "time";
 const char* resultKey = "res";
 const char* positionKey = "pos";
@@ -225,17 +225,6 @@ bool CONTROLLER_CLASS_NAME::sendButtonPress (button_t button, int count) {
 	return sendJson (json);
 }
 
-bool CONTROLLER_CLASS_NAME::sendStartAnouncement () {
-	const size_t capacity = JSON_OBJECT_SIZE (2);
-	DynamicJsonDocument json (capacity);
-
-	json[commandKey] = startCommandValue;
-	json["device"] = CONTROLLER_NAME;
-
-	return sendJson (json);
-}
-
-
 void CONTROLLER_CLASS_NAME::callbackUpButton (uint8_t pin, uint8_t event, uint8_t count, uint16_t length) {
 	DEBUG_INFO ("Up button. Event %d Count %d", event, count);
 	if (event == EVENT_PRESSED) {
@@ -344,8 +333,6 @@ void CONTROLLER_CLASS_NAME::setup (EnigmaIOTNodeClass* node, void* data) {
 	DEBUG_INFO ("Keep Alive period time: %d ms", config.keepAlivePeriod);
 	DEBUG_INFO ("On Relay state: %s", config.ON_STATE ? "HIGH" : "LOW");
 
-
-	sendStartAnouncement ();
 
 	DEBUG_DBG ("Finish begin");
 

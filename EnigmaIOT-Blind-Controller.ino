@@ -11,6 +11,7 @@
 #include <Arduino.h>
 #include <DebounceEvent.h>
 #include <EnigmaIOTjsonController.h>
+#include <FailSafe.h>
 #include "BlindController.h"
 
 #include <EnigmaIOTNode.h>
@@ -56,7 +57,13 @@ EnigmaIOTjsonController* controller;
 const auto fullTravelTime = 30000;
 #define RESET_PIN 13
 
+const time_t BOOT_FLAG_TIMEOUT = 10000; // Time in ms to reset flag
+const int MAX_CONSECUTIVE_BOOT = 3; // Number of rapid boot cycles before enabling fail safe mode
+const int LED = LED_BUILTIN; // Number of rapid boot cycles before enabling fail safe mode
+const int FAILSAFE_RTC_ADDRESS = 0; // If you use RTC memory adjust offset to not overwrite other data
+
 void connectEventHandler () {
+    controller->connectInform ();
 	DEBUG_WARN ("Connected");
 }
 
@@ -91,6 +98,11 @@ void setup () {
 	delay (1000);
 	Serial.println ();
 #endif
+    
+    FailSafe.checkBoot (MAX_CONSECUTIVE_BOOT, LED, FAILSAFE_RTC_ADDRESS); // Parameters are optional
+    if (FailSafe.isActive ()) { // Skip all user setup if fail safe mode is activated
+        return;
+    }
 
 	controller = (EnigmaIOTjsonController*)new CONTROLLER_CLASS_NAME ();
 
@@ -133,6 +145,12 @@ void setup () {
 }
 
 void loop () {
-	controller->loop ();
+    FailSafe.loop (BOOT_FLAG_TIMEOUT); // Use always this line
+
+    if (FailSafe.isActive ()) { // Skip all user loop code if Fail Safe mode is active
+        return;
+    }
+
+    controller->loop ();
 	EnigmaIOTNode.handle ();
 }
